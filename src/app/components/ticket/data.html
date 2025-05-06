@@ -1,0 +1,72 @@
+<div class="ticket-content">
+  <div class="ticket-wrapper">
+    <div class="content-header">
+      <h1 class="page-title">{{'ticket.title' | translate}}</h1>
+    </div>
+    <p class="page-subtitle">{{'ticket.subtitle' | translate}}</p>
+    <form class="mt-4">
+      <div class="form-group">
+        <label>{{'ticket.heading' | translate}}</label>
+        <input type="text" class="form-control" [(ngModel)]="data.title" name="title"
+          placeholder="{{'ticket.sub_heading' | translate}}">
+      </div>
+      <div class="form-group mt-3">
+        <label>{{'ticket.request_type' | translate}}</label>
+        <ng-select [(ngModel)]="data.subject" name="subject" [clearable]="false" [placeholder]="'choose' | translate">
+          <ng-option value="Предложение">{{'ticket.offer' | translate}}</ng-option>
+          <ng-option value="Жалоба">{{'ticket.claim' | translate}}</ng-option>
+          <ng-option value="Другое">{{'ticket.other' | translate}}</ng-option>
+        </ng-select>
+      </div>
+      <div class="form-group mt-3">
+        <label>{{ 'ticket.message' | translate }}</label>
+        <textarea class="form-control" style=" padding: 10px; resize: none;" rows="4" [(ngModel)]="data.message"
+          name="message" placeholder="{{ 'ticket.write_appeal' | translate }}">
+              </textarea>
+      </div>
+
+      <div class="file-upload-container mt-2">
+        <button class="btn btn-white" (click)="fileInput.click()">
+          <i class="uil uil-paperclip"></i> {{ 'ticket.attach' | translate }}
+        </button>
+        <input type="file" #fileInput multiple (change)="uploadPhoto($event)" style="display: none;" />
+        <div class="file-preview">
+          <div *ngFor="let file of data.files; let i = index" class="file-item">
+            <div class="file-icon">
+              <img [src]="getFileIcon(file.filename)" alt="file icon" />
+            </div>
+            <span class="file-name">{{ file.original_name }}</span>
+            <button class="delete-btn" (click)="removeFile(file, i)">
+              <i class="uil uil-trash-alt"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex justify-between mt-3">
+        <button class="btn btn-primary" [disabled]="loading" (click)="postTicket()">
+          <img *ngIf="loading" src="/assets/images/spinner.svg" class="spinner-load"> {{'send' | translate}}</button>
+        <!-- <button class="btn btn-white" [disabled]="loading">{{'cancel' | translate}}</button> -->
+      </div>
+    </form>
+  </div>
+
+  <div class="ticket-detail">
+    <div class="content-header">
+      <h1 class="">{{'ticket.history_appeals' | translate}}</h1>
+    </div>
+
+    <div class="ticket-card" *ngFor="let item of dataItems" routerLink="{{item.id}}">
+      <div class="ticket-card-title">{{item.title}}</div>
+      <div class="ticket-card-subtitle">{{item.subject}} · {{item.ticket_number}} · {{item.created_at | date : "dd MMMM
+        YYYY, HH:mm"}}</div>
+    </div>
+
+  </div>
+</div>
+
+<div class="loading-page" *ngIf="uploading">
+  <div>
+    <img src="/assets/images/spinner.svg"> <br> {{uploadingText}}
+  </div>
+</div>

@@ -1,0 +1,155 @@
+<div class="content-header">
+    <h1 class="page-title">{{'sidebar.statistics' | translate}}</h1>
+    <div class="statistics-filter d-flex align-center">
+        <ng-select [clearable]="false" [searchable]="true" notFoundText="Ничего не найдено" class="mr-2" 
+            [(ngModel)]="filter.customer" (ngModelChange)="getDataItems()">
+            <ng-option value="">{{'all_companies' | translate}}</ng-option>
+            <ng-option *ngFor="let customer of customers" [value]="customer">
+                {{ customer }}
+            </ng-option>
+        </ng-select>
+        <div class="btn-group mr-2">
+            <button class="btn-item" [class.active]="filter.period === 'monthly'" (click)="setActiveButton('monthly')">
+                {{ 'year' | translate }}
+            </button>
+            <button class="btn-item" [class.active]="filter.period === 'daily'" (click)="setActiveButton('daily')">
+                {{ 'month' | translate }}
+            </button>
+            <button class="btn-item" [class.active]="filter.period === 'weekly'" (click)="setActiveButton('weekly')">
+                {{ 'week' | translate }}
+            </button>
+        </div>
+
+        <div class="ng-select-group">
+            <ng-select *ngIf="filter.period === 'monthly' || filter.period === 'daily' || filter.period === 'weekly'"
+                [clearable]="false" [searchable]="false" [(ngModel)]="filter.year" (ngModelChange)="getDataItems()"
+                placeholder="{{ 'year' | translate }}" class="calendar-select" appendTo="body">
+                <ng-option *ngFor="let year of years" [value]="year">
+                    {{ year }}
+                </ng-option>
+            </ng-select>
+            <ng-select style="width: 100px;" *ngIf="filter.period === 'daily'" [clearable]="false" [searchable]="false"
+                [(ngModel)]="filter.month" (ngModelChange)="getDataItems()" placeholder="{{ 'month' | translate }}"
+                appendTo="body">
+                <ng-option *ngFor="let month of months" [value]="month.id">
+                    {{ 'months.' + month.id | translate }}
+                </ng-option>
+            </ng-select>
+
+        </div>
+    </div>
+
+    <button class="btn btn-primary" [disabled]="loading" (click)="downloadAllChartsAsPdfZip()">
+        <i class="uil uil-export"></i>
+        {{'export' | translate}}</button>
+</div>
+
+<div class="diagram-wrapper">
+    <ul class="diagrams-list">
+        <!-- Orders Chart -->
+        <li #diagramRef class="diagrams-list__item orders">
+            <div class="d-flex justify-between align-center">
+                <h2 class="diagrams-list__title">{{'statistics.orders' | translate}}</h2>
+                <button routerLink="/statistics/orders" class="btn btn-outline">{{'reports' | translate}} <i
+                        class="uil uil-angle-right report-angle"></i> </button>
+            </div>
+            <ul class="diagram-item__info-list" *ngIf="invoiceValues">
+                <li class="dg-info-list__item completed">
+                    <div class="amount">{{invoiceValues.total_finished_count}}</div>
+                    <div class="state">{{'orders.completed' | translate}}</div>
+                </li>
+                <li class="dg-info-list__item active">
+                    <div class="amount">{{invoiceValues.total_active_count}}</div>
+                    <div class="state">{{'orders.active' | translate}}</div>
+                </li>
+                <li class="dg-info-list__item canceled">
+                    <div class="amount">{{invoiceValues.total_cancelled_count}}</div>
+                    <div class="state">{{'orders.cancelled' | translate}}</div>
+                </li>
+                <li class="dg-info-list__item planned">
+                    <div class="amount">{{invoiceValues.total_plan_count}}</div>
+                    <div class="state">{{'orders.planned' | translate}}</div>
+                </li>
+
+            </ul>
+            <div class="chart">
+                <canvas #ordersChart></canvas>
+            </div>
+        </li>
+        <!-- Finance Chart -->
+        <li #diagramRef class="diagrams-list__item finances">
+            <div class="d-flex align-center justify-between">
+                <h2 class="diagrams-list__title">{{'statistics.receipts_arrears' | translate}}</h2>
+                <button routerLink="/statistics/finance" class="btn btn-outline">{{'reports' | translate}} <i
+                        class="uil uil-angle-right report-angle"></i> </button>
+            </div>
+            <ul class="diagram-item__info-list" *ngIf="financesValues">
+                <li class="dg-info-list__item completed">
+                    <div class="amount completed">{{financesValues?.total_income ? '+ '+
+                        (financesValues?.total_income | number): 0 }} UZS</div>
+                </li>
+                <li class="dg-info-list__item canceled">
+                    <div class="amount canceled">{{financesValues?.total_dept | number}} UZS</div>
+                </li>
+            </ul>
+            <div class="chart">
+                <canvas #financeChart></canvas>
+            </div>
+        </li>
+        <!-- Tasks Chart -->
+        <!-- <li #diagramRef class="diagrams-list__item tasks">
+            <div class="d-flex align-center justify-between">
+                <h2 class="diagrams-list__title">{{'statistics.tasks' | translate}}</h2>
+                <button routerLink="/statistics/task" class="btn btn-outline">{{'reports' | translate}} <i
+                        class="uil uil-angle-right report-angle"></i> </button>
+            </div>
+            <ul class="diagram-item__info-list" *ngIf="tasksValues">
+                <li class="dg-info-list__item delivered">
+                    <div class="amount">{{tasksValues.total_open}}</div>
+                    <div class="state">{{'statistics.delivered' | translate}}</div>
+                </li>
+                <li class="dg-info-list__item completed">
+                    <div class="amount">{{tasksValues.total_complete}}</div>
+                    <div class="state">{{'statistics.completed' | translate}}</div>
+                </li>
+                <li class="dg-info-list__item active">
+                    <div class="amount">{{tasksValues.total_active}}</div>
+                    <div class="state">{{'statistics.opened' | translate}}</div>
+                </li>
+            </ul>
+            <div class="chart">
+                <canvas #tasksChart></canvas>
+            </div>
+        </li> -->
+        <!-- Requests Chart -->
+        <!-- <li #diagramRef class="diagrams-list__item requests">
+            <div class="d-flex align-center justify-between">
+                <h2 class="diagrams-list__title">{{'statistics.requests' | translate}}</h2>
+                
+            </div>
+            <div class="d-flex align-center justify-between">
+                <ul class="diagram-item__info-list flex-column" *ngIf="requestsValues">
+                    <li class="dg-info-list__item delivered">
+                        <div class="amount">{{requestsValues.total_pending}}</div>
+                        <div class="state">{{'statistics.processing' | translate}}</div>
+                    </li>
+                    <li class="dg-info-list__item completed">
+                        <div class="amount">{{requestsValues.total_confirmed}}</div>
+                        <div class="state">{{'statistics.approved' | translate}}</div>
+                    </li>
+                    <li class="dg-info-list__item active">
+                        <div class="amount">{{requestsValues.total_cancelled}}</div>
+                        <div class="state">{{'statistics.rejected' | translate}}</div>
+                    </li>
+                </ul>
+                <div class="chart">
+                    <canvas #requestsChart></canvas>
+                </div>
+            </div>
+        </li> -->
+    </ul>
+</div>
+
+<div class="loading-page" *ngIf="loadingPage">
+    <img src="/assets/images/spinner.svg" class="spinner-load">
+</div>

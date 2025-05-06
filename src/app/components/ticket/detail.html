@@ -1,0 +1,232 @@
+<div class="content ticket-content d-flex justify-between" *ngIf="data">
+  <div class="w-100">
+    <div class="breadcrumb">
+      <span class="breadcrumb-item active" routerLink="/tickets"
+        >{{'ticket.title' | translate}}</span
+      >
+      <i class="uil uil-angle-right active"></i>
+      <span class="breadcrumb-item"
+        >{{data.subject}} {{data.ticket_number}}</span
+      >
+    </div>
+
+    <div class="ticket">
+      <h1 class="ticket-title">{{data.title}}</h1>
+      <p [innerHTML]="data.message" *ngIf="!is_edit"></p>
+      <div class="form-group mt-3" *ngIf="is_edit">
+        <label>{{ 'ticket.message' | translate }}</label>
+        <textarea class="form-control" rows="4" [(ngModel)]="data.message"
+          name="message" placeholder="{{ 'ticket.write_appeal' | translate }}">
+        </textarea>
+      </div>
+
+      <div class="d-flex">
+        <button class="btn btn-warning btn-xsm mb-3" *ngIf="data.client_id == currentUser.id" (click)="is_edit = !is_edit">{{'edit' | translate}}</button>
+        <button class="btn btn-success btn-l btn-xsm mb-3" *ngIf="is_edit" (click)="saveData()" [disabled]="loading"><img *ngIf="loading" src="/assets/images/spinner.svg" class="spinner-load"> {{'send' | translate}}</button>
+      </div>
+
+      <hr />
+
+      <div class="comments">
+        <div class="tabs">
+          <div
+            class="tab"
+            [ngClass]="{ 'active': activeTab === 'comments' }"
+            (click)="setActiveTab('comments')"
+          >
+            {{ 'ticket.comments' | translate }}
+          </div>
+          <div
+            class="tab"
+            [ngClass]="{ 'active': activeTab === 'attachments' }"
+            (click)="setActiveTab('attachments')"
+          >
+            {{ 'ticket.attachments' | translate }} ({{data &&
+            data.files.length}})
+          </div>
+        </div>
+
+        <form class="mt-4 d-flex gap-1" *ngIf="data.status !== 'closed' && activeTab == 'comments'">
+          <img
+            class="account-logo"
+            *ngIf="currentUser.photo"
+            src="{{siteUrl}}/uploads/clients/{{currentUser.photo}}"
+            alt="{{currentUser.name}}"
+          />
+          <img
+            class="account-logo"
+            *ngIf="!currentUser.photo"
+            src="/assets/images/default_avatar.svg"
+            alt="{{currentUser.name}}"
+          />
+          <div class="d-flex gap-1 w-100" style="flex-direction: column">
+            <textarea
+              class="form-control"
+              [(ngModel)]="comment.message"
+              name="message"
+              style="padding: 10px; resize: none; background-color: transparent"
+              rows="4"
+              placeholder="{{'ticket.add_comment' | translate }}"
+            >
+            </textarea>
+            <div class="d-flex gap-1">
+              <button
+                class="btn btn-primary"
+                (click)="addComment()"
+                [disabled]="comment.message == ''"
+              >
+                <img
+                  *ngIf="loading"
+                  src="/assets/images/spinner.svg"
+                  class="spinner-load"
+                />
+                {{'send' | translate}}
+              </button>
+              <button class="btn btn-outline">{{'cancel' | translate}}</button>
+            </div>
+          </div>
+        </form>
+
+        <div *ngIf="activeTab == 'comments'" class="mt-4">
+          <div
+            *ngFor="let item of data.messages"
+            class="comment d-flex gap-1 mb-4"
+          >
+            <img
+              class="account-logo"
+              *ngIf="item.client || item.user.photo"
+              src="{{siteUrl}}/uploads/clients/{{item.client ? item.client.photo : item.user.photo}}"
+              alt="{{item.client ? item.client.photo : item.user.photo}}"
+            />
+
+            <img
+              class="account-logo"
+              *ngIf="!item.client && !item.user.photo"
+              src="/assets/images/default_avatar.svg"
+            />
+            <div class="">
+              <div class="comment-author">
+                {{item.client ? item.client.name : item.user.fullname}}
+                <span class="comment-date"
+                  >{{item.created_at | date : "dd MMMM, HH:mm"}}</span
+                >
+              </div>
+              <div class="comment-message">{{item.message}}</div>
+              <span class="danger" style="cursor: pointer;" *ngIf="currentUser.id == item.client_id" (click)="deleteMessage(item)">{{'delete' | translate}}</span>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="activeTab == 'attachments'" class="mt-4">
+          <div class="file-upload-container mt-2" *ngIf="currentUser.id != data.client_id">
+            <div class="file-preview">
+              <a *ngFor="let file of data.files; let i = index" class="file-item" target="_blank" href="{{siteUrl}}/uploads/tickets/{{file.filename}}" style="background-color: #dad8df">
+                <div class="file-icon">
+                  <img [src]="getFileIcon(file.filename)" alt="file icon" />
+                </div>
+                <span class="file-name">{{ file.original_name }}</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="file-upload-container mt-2" *ngIf="currentUser.id == data.client_id">
+            <button class="btn btn-white" style="max-width: 250px;" (click)="fileInput.click()">
+              <i class="uil uil-paperclip"></i> {{ 'ticket.attach' | translate }}
+            </button>
+            <input type="file" #fileInput multiple (change)="uploadPhoto($event)" style="display: none;" />
+            <div class="file-preview">
+              <div *ngFor="let file of data.files; let i = index" class="file-item">
+                <div class="file-icon">
+                  <img [src]="getFileIcon(file.filename)" alt="file icon" />
+                </div>
+                <span class="file-name">{{ file.original_name }}</span>
+                <button class="delete-btn" (click)="removeFile(file, i)">
+                  <i class="uil uil-trash-alt"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail">
+    <h2 class="ticket-title">{{'ticket.detail_appeals' | translate}}</h2>
+    <div class="d-flex mb-3">
+      <span class="key">{{'status' | translate}}</span>
+      <span class="value status" [class]="data.status"
+        >{{data.status | translate}}</span
+      >
+    </div>
+    <div class="d-flex mb-3">
+      <span class="key">{{'ticket.author' | translate}}</span>
+      <span class="value">
+        <img
+          *ngIf="data.client.photo"
+          src="{{siteUrl}}/uploads/clients/{{data.client.photo}}"
+          alt="Client Photo"
+          width="30px"
+          height="30px"
+        />
+        <img
+          *ngIf="!data.client.photo"
+          src="/assets/images/default_avatar.svg"
+          alt="Client Photo"
+          width="30px"
+          height="30px"
+        />
+        {{data.client.name}}
+      </span>
+    </div>
+    <div class="d-flex mb-3">
+      <span class="key">{{'ticket.id' | translate}}</span>
+      <span class="value">{{data.ticket_number}}</span>
+    </div>
+    <div class="d-flex mb-3">
+      <span class="key">{{'ticket.request_type' | translate}}</span>
+      <span class="value">{{data.subject}}</span>
+    </div>
+    <div class="d-flex mb-3">
+      <span class="key">{{'ticket.created_at' | translate}}</span>
+      <span class="value">{{data.created_at | date : 'dd MMMM, HH:mm'}}</span>
+    </div>
+    <div class="d-flex mb-3">
+      <span class="key">{{'ticket.update' | translate}}</span>
+      <span class="value">{{data.updated_at | date : 'dd MMMM, HH:mm'}}</span>
+    </div>
+
+    <div class="d-flex gap-1">
+      <button
+        class="btn btn-danger"
+        *ngIf="data.status == 'pending' && data.client_id == currentUser.id"
+        (click)="delete()"
+      >
+        <img
+          *ngIf="loading"
+          src="/assets/images/spinner.svg"
+          class="spinner-load"
+        />
+        {{'delete' | translate}}
+      </button>
+      <button
+        class="btn btn-success"
+        *ngIf="data.status !== 'closed' &&  data.client_id == currentUser.id"
+        (click)="closeTicket()"
+      >
+        <img
+          *ngIf="loading"
+          src="/assets/images/spinner.svg"
+          class="spinner-load"
+        />
+        {{'close_ticket' | translate}}
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="loading-page" *ngIf="uploading">
+  <div>
+    <img src="/assets/images/spinner.svg"> <br> {{uploadingText}}
+  </div>
+</div>

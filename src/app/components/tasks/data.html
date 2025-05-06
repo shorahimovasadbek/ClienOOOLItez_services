@@ -1,0 +1,221 @@
+<div class="content-header" *ngIf="!isColleaguesRoute">
+    <h1 class="page-title">{{'task.title' | translate}}</h1>
+
+    <div class="filter">
+        <ul class="filters">
+            <li>
+                <button type="button" class="btn btn-outline"><span class="badge">{{allTasksCount}}</span>
+                    {{'task.all_tasks' |
+                    translate}}</button>
+            </li>
+            <span class="seperator-border"></span>
+            <li *ngFor="let item of statuses">
+                <button class="btn btn-light" [ngClass]="{'selected': item.checked}" (click)="selectedStatus(item)">
+                    <span class="filter-option__badge badge {{item.color}}">{{item.count}}</span> {{item.title |
+                    translate}} <i class="uil uil-times close"></i></button>
+            </li>
+        </ul>
+    </div>
+
+    <button class="btn btn-primary" routerLink="0/edit">
+        <i class="uil uil-plus"></i>
+        <span>{{'task.add' | translate}}</span>
+    </button>
+</div>
+<div class="content-filter" *ngIf="filter">
+    <div class="form-group">
+        <div class="input_icons">
+            <i *ngIf="filter.from_date" class="uil uil-times clear-icon" (click)="clearDate()"></i>
+            <input class="form-control" style="background: transparent !important;" type="text" id="date"
+                ngxDaterangepickerMd [autoApply]="true" autocomplete="off" [closeOnAutoApply]="true"
+                placeholder="{{ 'orders.all_period' | translate }}" [locale]="{ format: 'DD/MM/YYYY' }"
+                [(ngModel)]="selectedDateRange" (ngModelChange)="onDateRangeChange($event)" />
+            <i class="uil uil-calender"></i>
+        </div>
+    </div>
+    <div class="form-group">
+        <input type="text" class="form-control search grey" placeholder="{{'task.searchAs' | translate}}" name="search"
+            [(ngModel)]="filter.search" (keyup)="onKeyUp($event)">
+    </div>
+    <div class="pagination">
+        <p class="pagination__count-text d-web">
+            {{ pageParams.from }}-{{ pageParams.to }} из {{ pageParams.total }} заказов
+        </p>
+
+        <ng-select [clearable]="false" [(ngModel)]="filter.per_page" (change)="updatePageSize($event)">
+            <ng-option [value]="30">По 30 строк</ng-option>
+            <ng-option [value]="50">По 50 строк</ng-option>
+            <ng-option [value]="100">По 100 строк</ng-option>
+        </ng-select>
+
+        <div class="pagination__buttons">
+            <button [disabled]="pageParams.current_page <= 1" (click)="changePage(pageParams.current_page - 1)">
+                <i class="uil uil-angle-left"></i>
+            </button>
+            <button [disabled]="pageParams.current_page >= pageParams.last_page"
+                (click)="changePage(pageParams.current_page + 1)">
+                <i class="uil uil-angle-right"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="table-container">
+    <div class="table-wrapper">
+        <table>
+            <thead class="thead-sticky">
+                <tr>
+                    <th>{{'task.task' | translate}}</th>
+                    <th>{{'task.priority' | translate}}</th>
+                    <th>{{'status' | translate}}</th>
+                    <th>{{'created_at' | translate}}</th>
+                    <th>{{'task.executor' | translate}}</th>
+                    <th>{{'task.viewer' | translate}}</th>
+                    <th>{{'task.last_change' | translate}}</th>
+                </tr>
+            </thead>
+            <thead *ngIf="showFilters">
+                <tr>
+                    <th class="th-filter">
+                        <div class="th-filter-data">
+                            <i class="uil uil-search"></i>
+                            <i class="uil uil-times filter-clear-icon" *ngIf="filter.task"
+                                (click)="clearInput('task')"></i>
+                            <input class="th-filter-data__input w-100" type="text" placeholder="Поиск"
+                                [(ngModel)]="filter.task">
+                        </div>
+                    </th>
+                    <th>Приоритет</th>
+                    <th>Статус</th>
+                    <th>Обновлено</th>
+                    <th class="th-filter">
+                        <div class="th-filter-data">
+                            <i class="uil uil-search"></i>
+                            <i class="uil uil-times filter-clear-icon" *ngIf="filter.task"
+                                (click)="clearInput('task')"></i>
+                            <input class="th-filter-data__input w-100" type="text" placeholder="Поиск"
+                                [(ngModel)]="filter.task">
+                        </div>
+                    </th>
+                    <th class="th-filter">
+                        <div class="th-filter-data">
+                            <i class="uil uil-search"></i>
+                            <i class="uil uil-times filter-clear-icon" *ngIf="filter.task"
+                                (click)="clearInput('task')"></i>
+                            <input class="th-filter-data__input w-100" type="text" placeholder="Поиск"
+                                [(ngModel)]="filter.task">
+                        </div>
+                    </th>
+                    <th class="th-filter">
+                        <div class="th-filter-data">
+                            <i class="uil uil-search"></i>
+                            <i class="uil uil-times filter-clear-icon" *ngIf="filter.task"
+                                (click)="clearInput('task')"></i>
+                            <input class="th-filter-data__input w-100" type="text" placeholder="Поиск"
+                                [(ngModel)]="filter.task">
+                        </div>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let item of dataItems" routerLink="/tasks/{{item.id}}/view">
+                    <td>
+                        <div class="td-data">
+                            <a class="td-data__link">
+                                <p class="text bold">{{item.title}}</p>
+                            </a>
+                            <span class="sub-text">{{item.invoice?.num}} · {{item.invoice?.marwrut}}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="td-data">
+                            <button *ngIf="item.priority === 'high'" class="priority-button red">
+                                <i class="uil uil-angle-double-up"></i>
+                            </button>
+                            <button *ngIf="item.priority === 'low'" class="priority-button blue">
+                                <i class="uil uil-angle-double-down"></i>
+                            </button>
+                            <button *ngIf="item.priority === 'middle'" class="priority-button ">
+                                <i class="uil uil-grip-horizontal-line gray"></i>
+                            </button>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="td-data">
+                            <span class="status"
+                                [ngClass]="getStatusColor(item.status)">{{getStatusTitle(item.status)}}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="td-data">{{item.created_at | date : "dd MMMM YYYY HH:mm"}}</div>
+                    </td>
+                    <td>
+                        <div class="td-data account">
+                            <img *ngIf="item.executor && item.executor.photo" class="account-logo"
+                                src="{{siteUrl}}/uploads/clients/{{item.executor.photo}}" alt=""
+                                style="width: 30px; height: 30px" />
+                            <img *ngIf="item.executor && !item.executor.photo" class="account-logo"
+                                src="/assets/images/default_avatar.svg" alt="" style="width: 30px; height: 30px" />
+                            <p class="text">{{item.executor?.name}}</p>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="td-data accounts">
+                            <img *ngFor="let viewer of item.viewers" class="account-logo pointer"
+                                (click)="showTooltip($event, item.viewers)"
+                                src="{{siteUrl}}/uploads/clients/{{viewer.photo}}" alt="" />
+                        </div>
+                    </td>
+
+                    <td>
+                        <div class="td-data account">
+                            <img *ngIf="item.lastupd && item.lastupd.photo" class="account-logo"
+                                src="{{siteUrl}}/uploads/clients/{{item.lastupd.photo}}" alt=""
+                                style="width: 30px; height: 30px" />
+                            <img *ngIf="item.lastupd && !item.lastupd.photo" class="account-logo"
+                                src="/assets/images/default_avatar.svg" alt="" style="width: 30px; height: 30px" />
+                            <div>
+                                <p class="text" *ngIf="item.lastupd">{{item.lastupd.name}}</p>
+                                <div class="sub-text">{{item.updated_at | date : "dd MMMM YYYY HH:mm"}}</div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="pagination">
+    <p class="pagination__count-text d-web">
+        {{ pageParams.from }}-{{ pageParams.to }} из {{ pageParams.total }} заказов
+    </p>
+
+    <ng-select [clearable]="false" [(ngModel)]="filter.per_page" (change)="updatePageSize($event)">
+        <ng-option [value]="30">По 30 строк</ng-option>
+        <ng-option [value]="50">По 50 строк</ng-option>
+        <ng-option [value]="100">По 100 строк</ng-option>
+    </ng-select>
+
+    <div class="pagination__buttons">
+        <button [disabled]="pageParams.current_page <= 1" (click)="changePage(pageParams.current_page - 1)">
+            <i class="uil uil-angle-left"></i>
+        </button>
+        <button [disabled]="pageParams.current_page >= pageParams.last_page"
+            (click)="changePage(pageParams.current_page + 1)">
+            <i class="uil uil-angle-right"></i>
+        </button>
+    </div>
+</div>
+<div class="loading-page" *ngIf="loadingPage">
+    <img src="/assets/images/spinner.svg" class="spinner-load">
+</div>
+<div #tooltip class="tooltip" *ngIf="tooltipVisible && tooltipData.length">
+    <ul>
+        <li *ngFor="let viewer of tooltipData">
+            <img [src]="viewer.photo ? siteUrl + '/uploads/clients/' + viewer.photo : 'assets/default-avatar.png'"
+                class="tooltip-avatar" alt="{{ viewer.name }}" />
+            <span class="tooltip-name">{{ viewer.name }}</span>
+        </li>
+    </ul>
+</div>

@@ -1,0 +1,148 @@
+<div class="requests-wrapper" *ngIf="data">
+    <div class="request-chat">
+        <div class="request-chat__header">
+            <div class="request-chat__title-wrapper">
+                <p class="request-chat__title" routerLink="/requests">{{'requests.my_requests' | translate }}
+                </p>
+                <i class="uil uil-angle-right"></i>
+                <p>{{data.num}}</p>
+            </div>
+            <div class="request-chat__info">
+                <p class="directions">{{data.title}}</p>
+                <p class="date">{{data.created_at | date : "dd.MM.YYYY"}}</p>
+                <p class="request-status" [ngClass]="data.status">{{data.status | translate}}</p>
+            </div>
+        </div>
+
+        <div class="request-chat__body" #messageList>
+            <ul>
+                <li *ngFor="let message of messages; let last = last">
+                    <img class="avatar" *ngIf="!(message?.user?.photo || message?.client?.photo)"
+                        src="./assets/images/default_avatar.svg" alt="account image" width="45" height="45">
+                    <!-- User photo bor bo'lsa -->
+                    <img class="avatar" *ngIf="message?.user?.photo"
+                        [src]="siteUrl + '/uploads/clients/' + message.user.photo" alt="account image" width="45"
+                        height="45">
+                    <!-- Client photo bor bo'lsa -->
+                    <img class="avatar" *ngIf="message?.client?.photo && !message?.user?.photo"
+                        [src]="siteUrl + '/uploads/clients/' + message.client.photo" alt="account image" width="45"
+                        height="45">
+
+                    <div class="message-wrapper">
+                        <div class="message-wrapper__header">
+                            <p class="message-account-name" [ngClass]="message.user ? 'msg' : ''">
+                                <span *ngIf="message && message.user">{{message.user.fullname}}</span>
+                                <span *ngIf="message && message.client">{{message.client.name ? message.client.name :
+                                    message.client.fullname}}</span>
+                            </p>
+                            <p *ngIf="message && message.user" class="messenger">Менеджер</p>
+                            <p class="date">{{message.created_at | date : "dd.MM.YYYY"}}</p>
+                        </div>
+                        <a href="{{siteUrl}}{{message.file}}" target="_blank" *ngIf="message.file">
+                            <img [src]="siteUrl + message.file" class="message-file">
+                        </a> <br>
+                        <p class="message-wrapper__text" *ngIf="message && !message.file" [innerHTML]="message.msg"></p>
+                        <div *ngIf="last">
+                            <a *ngIf="(message.client_id == currentUser.id)" class="red" role="button"
+                                (click)="deleteMessage(message.uuid)">{{'delete' | translate}}
+                            </a>
+                            <a *ngIf="(message.client_id == currentUser.id)" class="blue ml-2" role="button"
+                                (click)="showUpdate(message)">{{'change' | translate}}
+                            </a>
+                        </div>
+
+                    </div>
+
+                </li>
+            </ul>
+
+        </div>
+        <div class="request-chat__footer">
+            <div class="input-yield">
+                <div class="editing-message" *ngIf="updateMessageModal">
+                    {{'editing_message' | translate}}: {{ selectedMessage.msg }}
+                    <button (click)="cancelEdit()">{{'cancel' | translate}}</button>
+                </div>
+                <div class="input-wrapper">
+                    <div class="input-wrapper-image">
+                        <i class="uil uil-comment"></i>
+                    </div>
+
+                    <input type="text" placeholder="Написать сообщение" [(ngModel)]="inputText">
+                    <div class="input-wrapper-image">
+                        <i class="uil uil-paperclip" (click)="triggerFileInput()"></i>
+                        <input type="file" id="uploadFile" accept="image/*" name="file_upload"
+                            (change)="uploadFile($event)" #fileInput>
+
+                    </div>
+                    <button class="send" (click)="updateMessageModal ? updateMessage() : sendMessage()">{{
+                        updateMessageModal ? ('edit' | translate) : ('send' | translate) }}</button>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="request-detail">
+        <div class="request-detail__header">
+            <h2>{{'requests.detail' | translate}}</h2>
+        </div>
+        <div class="request-detail__body">
+            <ul>
+                <li>
+                    <p class="name">{{'status' | translate}}</p>
+                    <p class="request-status" [ngClass]="data.status">{{data.status | translate}}</p>
+                </li>
+                <li>
+                    <p class="name">{{'requests.request_num' | translate}}</p>
+                    <p class="description">{{data.num}}</p>
+                </li>
+                <li>
+                    <p class="name">{{'orders.route' | translate}}</p>
+                    <p class="description">{{data.title}}</p>
+                </li>
+                <li>
+                    <p class="name">{{'created_at' | translate}}</p>
+                    <p class="description">{{data.created_at | date : 'dd MMMM YYYY'}}</p>
+                </li>
+                <li>
+                    <p class="name">{{'orders.status' | translate}}</p>
+                    <p class="description process">В обработке</p>
+                </li>
+                <li>
+                    <p class="name">{{'orders.order_num' | translate}}</p>
+                    <p class="description order-number">
+                        <a href="#">A1234</a>
+                    </p>
+                </li>
+            </ul>
+        </div>
+        <div class="request-detail__author">
+            <ul>
+                <li>
+                    <p class="name">{{'author' | translate}}</p>
+                    <div class="account">
+                        <img *ngIf="data.client && !data.client.photo" src="./assets/images/default_avatar.svg"
+                            alt="account logo" width="30" height="30">
+                        <img *ngIf="data.client && data.client.photo"
+                            [src]="siteUrl + '/uploads/clients/' + data.client.photo" alt="account logo" width="30"
+                            height="30">
+                        <p class="description">{{data.client.name}}</p>
+                    </div>
+                </li>
+                <!-- <li>
+                        <p class="name">{{'manager' | translate}}</p>
+                        <div class="account">
+                            <img src="./assets/images/default_avatar.svg" alt="account logo" width="30" height="30">
+                            <p class="description">Муаммар М.</p>
+                        </div>
+                    </li> -->
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="loading-page" *ngIf="loadingPage">
+    <img src="/assets/images/spinner.svg" class="spinner-load">
+</div>

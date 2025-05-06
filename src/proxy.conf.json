@@ -1,0 +1,8 @@
+{
+  "/api": {
+    "target": "http://litez.loc",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}

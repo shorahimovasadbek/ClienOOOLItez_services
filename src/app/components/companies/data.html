@@ -1,0 +1,38 @@
+<div class="content-header">
+    <h2 class="page-title">{{'companies.title' | translate}}</h2>
+</div>
+
+<ul class="companies__list">
+    <li class="companies__list-item" *ngFor="let item of dataItems">
+        <h3 class="title">{{item.title}}</h3>
+        <ul class="companies-item__list">
+            <li>
+                <i class="uil uil-registered"></i>
+                <p class="companies-item__text">{{item.title}}</p>
+            </li>
+            <li>
+                <i class="uil uil-location-point"></i>
+                <p class="companies-item__text">{{item.address ? item.address : ('no_data' | translate)}}</p>
+            </li>
+            <li>
+                <i class="uil uil-phone"></i>
+                <p class="companies-item__text">{{item.contact ? item.contact : ('no_data' | translate)}}</p>
+            </li>
+            <li>
+                <i class="uil uil-envelope"></i>
+                <p class="companies-item__text">{{item.email_address ? item.email_address : ('no_data' | translate)}}
+                </p>
+            </li>
+        </ul>
+        <div class="companies-item__operations mt-2">
+            <button class="btn btn-outline" [routerLink]="'/statistics'" [queryParams]="{ customer: item.title }">
+                {{ 'statistics.title' | translate }}
+            </button>
+            <button class="btn btn-outline" routerLink="/documents" [queryParams]="{ customer: item.title }">{{'documents.title' | translate}}</button>
+        </div>
+    </li>
+</ul>
+
+<div class="loading-page" *ngIf="loadingPage">
+    <img src="/assets/images/spinner.svg" class="spinner-load">
+</div>

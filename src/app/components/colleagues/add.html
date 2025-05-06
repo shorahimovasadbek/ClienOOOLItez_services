@@ -1,0 +1,95 @@
+<div class="content">
+    <div class="profile-photo">
+        <div class="btn btn-default btn-upload">
+            <input type="file" id="uploadPhoto" accept="image/*" name="photo" (change)="uploadPhoto($event)">
+            <img *ngIf="data.photo" src="{{siteUrl}}/uploads/clients/{{data.photo}}">
+            <img *ngIf="!data.photo" src="/assets/images/default_avatar.svg">
+            <i class="uil uil-camera"></i>
+        </div>
+        <div>
+            <h3 class="page-title">{{data.name}}</h3>
+            <p>{{data.email}}</p>
+        </div>
+    </div>
+    <form #dataForm="ngForm" novalidate="novalidate" class="row">
+        <div class="col-sm-3">
+            <div class="card h-full">
+                <h4>{{'profile.title_1' | translate}}</h4>
+                <div class="form-group mb-3">
+                    <label class="required"> {{'profile.name' | translate}} </label>
+                    <input type="text" class="form-control" name="name" [(ngModel)]="data.name" required>
+                </div>
+                <div class="form-group mb-3">
+                    <label>{{'profile.dob' | translate}}</label>
+                    <input type="date" class="form-control" name="dob" [(ngModel)]="data.dob">
+                </div>
+                <div class="form-group">
+                    <label>{{'profile.info' | translate}}</label>
+                    <textarea rows="3" class="form-control" name="info" [(ngModel)]="data.info"></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-3">
+            <div class="card h-full">
+                <h4>{{'profile.title_2' | translate}}</h4>
+                <div class="form-group mb-3">
+                    <label class="required">{{'profile.email' | translate}}</label>
+                    <input type="email" class="form-control" name="email" [(ngModel)]="data.email" required>
+                </div>
+                <div class="form-group mb-3">
+                    <label>{{'profile.phone' | translate}}</label>
+                    <ngx-intl-tel-input [cssClass]="'custom-intl-tel'" [enableAutoCountrySelect]="true"
+                        [enablePlaceholder]="true" [searchCountryFlag]="true"
+                        [searchCountryField]="[SearchCountryField.Iso2, SearchCountryField.Name]"
+                        [selectedCountryISO]="CountryISO.Uzbekistan" [phoneValidation]="true" name="phone"
+                        [(ngModel)]="data.phone" [enablePlaceholder]="false">
+                    </ngx-intl-tel-input>
+
+                    <!-- <input type="tel" class="form-control" name="phone" [(ngModel)]="data.phone"
+                        placeholder="+998 XX....."> -->
+                </div>
+                <div class="form-group mb-3">
+                    <label>Telegram</label>
+                    <input type="text" class="form-control" name="telegram" [(ngModel)]="data.telegram">
+                </div>
+                <div class="form-group">
+                    <label>Whatsapp</label>
+                    <input type="text" class="form-control" name="whatsapp" [(ngModel)]="data.whatsapp">
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-3">
+            <div class="card h-full">
+                <h4>{{'profile.title_3' | translate}}</h4>
+                <div class="form-group mb-3">
+                    <label class="required">{{'profile.job' | translate}}</label>
+                    <input type="text" class="form-control" name="job" [(ngModel)]="data.job" required>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="required">{{'profile.department' | translate}}</label>
+                    <input type="text" class="form-control" name="department" [(ngModel)]="data.department" required>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="required">{{'profile.company' | translate}}</label>
+                    <ng-select class="form-control" name="company" [(ngModel)]="data.company" [clearable]="false"
+                        [searchable]="false" required>
+                        <ng-option *ngFor="let item of companies" [value]="item.title">{{item.title}}</ng-option>
+                    </ng-select>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-3">
+            <div class="card h-full">
+                <h4>{{'auth.password' | translate}}</h4>
+                <div class="form-group mb-3">
+                    <label class="required">{{'auth.enter_password' | translate}}</label>
+                    <input type="text" class="form-control" name="password" [(ngModel)]="data.password"
+                        placeholder="{{'auth.enter_password' | translate}}" required>
+                </div>
+
+                <button class="btn btn-primary" (click)="patchData()" [disabled]="loading">{{'save' |
+                    translate}}</button>
+            </div>
+        </div>
+    </form>
+</div>

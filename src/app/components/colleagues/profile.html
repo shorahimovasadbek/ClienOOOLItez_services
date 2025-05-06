@@ -1,0 +1,117 @@
+<form *ngIf="(data || !loadingPage)" #dataForm="ngForm" novalidate="novalidate" class="row">
+    <div class="col-sm-3">
+        <div class="card h-full">
+            <h4>{{'profile.title_1' | translate}}</h4>
+            <div class="form-group mb-3">
+                <label>{{'profile.name' | translate}}</label>
+                <input *ngIf="is_access" type="text" class="form-control" name="name" [(ngModel)]="data.name" required
+                    [disabled]="currentUser.role !== 'client'">
+                <div *ngIf="!is_access" class="bold">{{data.name ? data.name : ('no_data' | translate)}}</div>
+            </div>
+            <div class="form-group mb-3">
+                <label>{{'profile.dob' | translate}}</label>
+                <input *ngIf="is_access" type="date" class="form-control" name="dob" [(ngModel)]="data.dob"
+                    [disabled]="currentUser.role !== 'client'">
+                <div *ngIf="!is_access" class="bold">{{data.dob ? (data.dob | date : 'dd.MM.yyyy') : ('no_data' |
+                    translate)}}</div>
+            </div>
+            <div class="form-group">
+                <label>{{'profile.info' | translate}}</label>
+                <textarea *ngIf="is_access" rows="3" class="form-control" name="info" [(ngModel)]="data.info"
+                    [disabled]="currentUser.role !== 'client'"></textarea>
+                <div *ngIf="!is_access" class="bold">{{data.info ? data.info : ('no_data' | translate) }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-3">
+        <div class="card h-full">
+            <h4>{{'profile.title_2' | translate}}</h4>
+            <div class="form-group mb-3">
+                <label>{{'profile.email' | translate}}</label>
+                <input *ngIf="is_access" type="email" class="form-control" name="email" [(ngModel)]="data.email"
+                    required [disabled]="currentUser.role !== 'client'">
+                <div *ngIf="!is_access" class="bold">{{data.email ? data.email : ('no_data' | translate) }}</div>
+
+            </div>
+            <div class="form-group mb-3">
+                <label>{{'profile.phone' | translate}}</label>
+                <ngx-intl-tel-input *ngIf="is_access" [cssClass]="'custom-intl-tel'" [enableAutoCountrySelect]="true"
+                    [enablePlaceholder]="true" [searchCountryFlag]="true"
+                    [searchCountryField]="[SearchCountryField.Iso2, SearchCountryField.Name]"
+                    [selectedCountryISO]="CountryISO.Uzbekistan" name="phone" [(ngModel)]="data.phone"
+                    [enablePlaceholder]="false">
+                </ngx-intl-tel-input>
+                <div *ngIf="!is_access" class="bold">{{data.phone ? data.phone : ('no_data' | translate) }}</div>
+
+            </div>
+            <div class="form-group mb-3">
+                <label>Telegram</label>
+                <input *ngIf="is_access" type="text" class="form-control" name="telegram" [(ngModel)]="data.telegram"
+                    [disabled]="currentUser.role !== 'client'">
+                <div *ngIf="!is_access" class="bold">{{data.telegram ? data.telegram : ('no_data' | translate) }}</div>
+            </div>
+            <div class="form-group">
+                <label>Whatsapp</label>
+                <input *ngIf="is_access" type="text" class="form-control" name="whatsapp" [(ngModel)]="data.whatsapp"
+                    [disabled]="currentUser.role !== 'client'">
+                <div *ngIf="!is_access" class="bold">{{data.whatsapp ? data.whatsapp : ('no_data' | translate) }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-3">
+        <div class="card h-full">
+            <h4>{{'profile.title_3' | translate}}</h4>
+            <div class="form-group mb-3">
+                <label>{{'profile.job' | translate}}</label>
+                <input *ngIf="is_access" type="text" class="form-control" name="job" [(ngModel)]="data.job"
+                    [disabled]="currentUser.role !== 'client'">
+                <div *ngIf="!is_access" class="bold">{{data.job ? data.job : ('no_data' | translate) }}</div>
+            </div>
+            <div class="form-group mb-3">
+                <label>{{'profile.department' | translate}}</label>
+                <input *ngIf="is_access" type="text" class="form-control" name="department"
+                    [(ngModel)]="data.department" [disabled]="currentUser.role !== 'client'">
+                <div *ngIf="!is_access" class="bold">{{data.department ? data.department : ('no_data' | translate) }}
+                </div>
+            </div>
+            <div class="form-group mb-3">
+                <label>{{'profile.company' | translate}}</label>
+                <ng-select *ngIf="is_access" class="form-control" name="company" [(ngModel)]="data.company"
+                    [clearable]="false" [searchable]="false" [disabled]="currentUser.role !== 'client'" required>
+                    <ng-option *ngFor="let item of companies" [value]="item.title">{{item.title}}</ng-option>
+                </ng-select>
+                <div *ngIf="!is_access" class="bold">{{data.company ? data.company : ('no_data' | translate) }}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-3" *ngIf="is_access">
+        <div class="card h-full">
+            <h4>{{'profile.title_4' | translate}}</h4>
+            <div class="form-group mb-3">
+                <label>{{'status' | translate}}</label>
+                <div class="btn-group">
+                    <ng-select class="w-100" clearable="false" searchable="false" name="status"
+                        style="background-color: #fff;" [(ngModel)]="data.status">
+                        <ng-option value="active">{{'active' | translate }}</ng-option>
+                        <ng-option value="inactive"> {{ 'inactive' | translate }}</ng-option>
+                    </ng-select>
+                </div>
+            </div>
+
+            <div class="form-group mb-3">
+                <label>{{'profile.new_password' | translate}}</label>
+                <input type="text" class="form-control" name="password" [(ngModel)]="data.password"
+                    placeholder="{{'profile.enter_new_password' | translate}}">
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary" [disabled]=" loading" (click)="patchData()">{{'save' |
+                    translate}} <img *ngIf="loading" src="/assets/images/spinner.svg" class="spinner-load"></button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="loading-page" *ngIf="loadingPage">
+    <img src="/assets/images/spinner.svg" class="spinner-load">
+</div>

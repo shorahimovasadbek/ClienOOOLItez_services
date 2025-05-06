@@ -1,0 +1,232 @@
+<div class="content-header">
+    <h2 class="content-header__title">{{ 'chat.' + filter.type+ '_title' | translate }}</h2>
+    <button class="btn btn-primary" (click)="showAddChatModal = true">
+        <i class="uil uil-plus"></i>
+        <span class="d-web">{{'chat.add_chat' | translate}}</span>
+    </button>
+</div>
+
+<div class="content-filter">
+    <div class="d-flex align-center">
+        <button class="btn" [ngClass]="{'btn-outline': activeButton === 'invoice', 'grey': activeButton !== 'invoice'}"
+            (click)="setActive('invoice')">
+            {{'reviews.orders' | translate}}
+        </button>
+        <button class="btn"
+            [ngClass]="{'btn-outline': activeButton === 'employee', 'grey': activeButton !== 'employee'}"
+            (click)="setActive('employee')">
+            {{'collegues.title' | translate}}
+        </button>
+        <button class="btn" [ngClass]="{'btn-outline': activeButton === 'litez', 'grey': activeButton !== 'litez'}"
+            (click)="setActive('litez')">
+            {{'reviews.managers' | translate}}
+        </button>
+        <button class="btn" [ngClass]="{'btn-outline': activeButton === 'archive', 'grey': activeButton !== 'archive'}"
+            (click)="setActive('archive')">
+            {{'archive' | translate}}
+        </button>
+    </div>
+
+    <div class="form-group">
+        <input type="text" class="form-control search grey" placeholder="{{'search' | translate}}" name="search"
+            [(ngModel)]="filter.search" (keyup)="onKeyUp($event)">
+    </div>
+
+    <!-- <div class="select-wrapper">
+        <ng-select [clearable]="false" [searchable]="false" [(ngModel)]="filter.period" (change)="getChats()">
+            <ng-option >Недавние</ng-option>
+        </ng-select>
+    </div> -->
+
+    <div class="pagination">
+        <p class="pagination__count-text d-web">
+            {{ pageParams.from }}-{{ pageParams.to }} из {{ pageParams.total }} заказов
+        </p>
+
+        <ng-select [clearable]="false" [searchable]="false" [(ngModel)]="pageParams.per_page"
+            (change)="updatePageSize($event)">
+            <ng-option [value]="10">По 10 строк</ng-option>
+            <ng-option [value]="30">По 30 строк</ng-option>
+            <ng-option [value]="50">По 50 строк</ng-option>
+        </ng-select>
+
+        <div class="pagination__buttons">
+            <button [disabled]="pageParams.current_page <= 1" (click)="changePage(pageParams.current_page - 1)">
+                <i class="uil uil-angle-left"></i>
+            </button>
+            <button [disabled]="pageParams.current_page >= pageParams.last_page"
+                (click)="changePage(pageParams.current_page + 1)">
+                <i class="uil uil-angle-right"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="table-container">
+    <div class="table-wrapper">
+        <table>
+            <thead class="thead-sticky">
+                <tr>
+                    <th>{{'chat.' + filter.type+ '_table' | translate}}</th>
+                    <th>{{'chat.last_message' | translate}}</th>
+                    <th>{{'chat.members' | translate}}</th>
+                    <th>{{'chat.author' | translate}}</th>
+                    <th *ngIf="filter.type == 'archive'">{{'chat.category' | translate}}</th>
+                    <th *ngIf="filter.type === 'invoice'">{{'chat.order_status' | translate}}</th>
+                    <th>{{'chat.action' | translate}}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let item of dataItems">
+                    <td>
+                        <div class="td-data d-flex align-center">
+                            <p class="text bold">{{item.invoice_id}}</p>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="td-data badge-data d-flex align-center">
+                            <!-- <span class="badge badge-danger mr-1">1</span> -->
+                            <p class="text"><span class="bold">{{item.client.name}}:</span> {{item.last_msg}}</p>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="td-data accounts">
+                            <img src="/img/account.png" alt="account-logo" width="30" height="30">
+                            <img src="/img/account.png" alt="account-logo" width="30" height="30">
+                            <img src="/img/account.png" alt="account-logo" width="30" height="30">
+                        </div>
+                    </td>
+                    <td>
+                        <div class="td-data account">
+                            <img src="/img/account.png" alt="account-logo" width="30" height="30">
+                            <p class="text">Yuriy Li</p>
+                        </div>
+                    </td>
+                    <td *ngIf="filter.type !== 'invoice'">
+                        Коллега
+                    </td>
+                    <td *ngIf="filter.type === 'invoice'">
+                        <div class="td-data  d-flex align-center">
+                            <span class="status active">Активный</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="td-data operations d-flex align-center">
+                            <span class="uil uil-ellipsis-h"></span>
+                        </div>
+                    </td>
+                </tr>
+                <tr *ngIf="dataItems && dataItems.length === 0">
+                    <td colspan="7" class="text-center">
+                        <div class="d-flex flex-column align-center mt-3 mb-3">
+                            <img src="./assets/images/no_data.png" alt="" width="64" height="64">
+                            <span class="mt-2">{{ 'no_data' | translate }}</span>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="pagination">
+    <p class="pagination__count-text d-web">
+        {{ pageParams.from }}-{{ pageParams.to }} из {{ pageParams.total }} заказов
+    </p>
+
+    <ng-select [clearable]="false" [searchable]="false" [(ngModel)]="pageParams.per_page"
+        (change)="updatePageSize($event)">
+        <ng-option [value]="10">По 10 строк</ng-option>
+        <ng-option [value]="30">По 30 строк</ng-option>
+        <ng-option [value]="50">По 50 строк</ng-option>
+    </ng-select>
+
+    <div class="pagination__buttons">
+        <button [disabled]="pageParams.current_page <= 1" (click)="changePage(pageParams.current_page - 1)">
+            <i class="uil uil-angle-left"></i>
+        </button>
+        <button [disabled]="pageParams.current_page >= pageParams.last_page"
+            (click)="changePage(pageParams.current_page + 1)">
+            <i class="uil uil-angle-right"></i>
+        </button>
+    </div>
+</div>
+
+<div class="sweet_alert-content" [ngClass]="{'open': showAddChatModal}">
+    <div class="sweet_alert-body" style="width: 600px;">
+        <h2 class="sweet_alert-title"> {{'chat.add_chat' | translate }}</h2>
+        <button class="close-alert" type="button" (click)="closeAlert()">
+            <i class="uil uil-times"></i>
+        </button>
+        <div class="sweet_alert-inner full">
+            <div class="row mb-3 mb-2">
+
+                <div class="col-sm-12 mb-3">
+                    <div class="form-group">
+                        <label class="form-label">{{'chat.chat_type' | translate}}:</label>
+                        <ng-select [clearable]="false" [searchable]="false" [(ngModel)]="data.type">
+                            <ng-option value="invoice">{{'chat.invoice_table' | translate}}</ng-option>
+                            <ng-option value="employee">{{'chat.employee_table' | translate}}</ng-option>
+                            <ng-option value="litez">{{'chat.litez_table' | translate}}</ng-option>
+                        </ng-select>
+                    </div>
+                </div>
+
+                <div class="col-sm-12 mb-3" *ngIf="data.type === 'invoice'">
+                    <div class="form-group">
+                        <label class="form-label">{{'orders.order_num' | translate}}:</label>
+                        <input type="text" class="form-control" [(ngModel)]="data.invoice_id">
+                    </div>
+                </div>
+
+                <div class="col-sm-12 mb-3" *ngIf="data.type === 'employee'">
+                    <div class="form-group">
+                        <label class="form-label">{{'chat.employee_table' | translate}}:</label>
+                        <ng-select [clearable]="false" [searchable]="true" notFoundText="Ничего не найдено"
+                            [(ngModel)]="data.employee_id">
+                            <ng-option *ngFor="let employee of employees" [value]="employee.id">
+                                {{ employee.name }}
+                            </ng-option>
+                        </ng-select>
+                    </div>
+                </div>
+
+                <div class="col-sm-12 mb-3" *ngIf="data.type === 'litez'">
+                    <div class="form-group">
+                        <label class="form-label">{{'chat.litez_table' | translate}}:</label>
+                        <ng-select [clearable]="false" [searchable]="true" notFoundText="Ничего не найдено"
+                            [(ngModel)]="data.user_id">
+                            <ng-option *ngFor="let employee of litez" [value]="employee.id">
+                                {{ employee.fullname }}
+                            </ng-option>
+                        </ng-select>
+                    </div>
+                </div>
+
+                <div class="col-sm-12 mb-3" *ngIf="data.type === 'invoice'">
+                    <div class="form-group">
+                        <label class="form-label">{{'chat.litez_table' | translate}}:</label>
+                        <ng-select [clearable]="false" [searchable]="true" multiple notFoundText="Ничего не найдено"
+                            [(ngModel)]="data.users">
+                            <ng-option *ngFor="let employee of litez" [value]="employee.id">
+                                {{ employee.fullname }}
+                            </ng-option>
+                        </ng-select>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="sweet_alert-buttons">
+            <button (click)="closeAlert()" type="button" class="btn btn-danger ml-3" [disabled]="loading">{{'cancel' |
+                translate}} <img *ngIf="loading" src="/assets/images/spinner.svg" class="spinner-load"></button>
+            <button (click)="postChat()" type="button" class="btn btn-primary ml-3" [disabled]="loading">{{'save' |
+                translate}} <img *ngIf="loading" src="/assets/images/spinner.svg" class="spinner-load"></button>
+        </div>
+    </div>
+</div>
+
+<div class="loading-page" *ngIf="loadingPage">
+    <img src="/assets/images/spinner.svg" class="spinner-load">
+</div>

@@ -1,0 +1,263 @@
+<div class="content-header">
+  <h1 class="page-title">{{'documents.title' | translate}}</h1>
+  <div class="filter">
+    <ul class="filters">
+      <li>
+        <button type="button" class="btn" [ngClass]="{'selected': !anyChecked()}"
+          (click)="selectedStatus({ title: 'По заказам', val: 'document', checked: true })">
+          {{ 'По заказам' | translate }}
+        </button>
+      </li>
+      <span class="seperator-border"></span>
+      <li *ngFor="let item of statuses">
+        <button class="btn btn-light" [ngClass]="{'selected': item.checked}" (click)="selectedStatus(item)">
+          {{ item.title | translate }}
+        </button>
+      </li>
+    </ul>
+  </div>
+  <div></div>
+</div>
+
+<div class="content-filter">
+  <div class="form-group" *ngIf="filter.type === 'document'">
+    <div class="input_icons">
+      <i *ngIf="filter.from_date" class="uil uil-times clear-icon" (click)="clearDate()"></i>
+      <input class="form-control date-range" style="background: transparent !important;" type="text" id="date"
+        ngxDaterangepickerMd [autoApply]="true" autocomplete="off" [closeOnAutoApply]="true"
+        placeholder="{{ 'orders.all_period' | translate }}" [locale]="{ format: 'DD/MM/YYYY' }"
+        [(ngModel)]="selectedDateRange" (ngModelChange)="onDateRangeChange($event)" />
+      <i class="uil uil-calender"></i>
+    </div>
+  </div>
+  <div class="button-group">
+
+    <button class="btn btn-outline" style="padding: 8px 20px 8px 10px" (click)="filterModal = !filterModal">
+      <i *ngIf="!showFilters" class="uil uil-filter"></i>
+      <span style="color: #535260;">{{'filter' | translate}}</span>
+    </button>
+    <button class="btn btn-outline" (click)="resetFilter()" style="padding: 8px 20px 8px 10px">
+      <i class="uil uil-filter-slash"></i>
+      <span style="color: #535260;">{{'reset' | translate}}</span>
+    </button>
+  </div>
+  <div class="pagination">
+    <p class="pagination__count-text d-web">
+      {{ pageParams.from }}-{{ pageParams.to }} из {{ pageParams.total }} заказов
+    </p>
+
+    <ng-select [clearable]="false" [searchable]="false" [(ngModel)]="filter.per_page" (change)="updatePageSize($event)">
+      <ng-option [value]="30">По 30 строк</ng-option>
+      <ng-option [value]="50">По 50 строк</ng-option>
+      <ng-option [value]="100">По 100 строк</ng-option>
+    </ng-select>
+
+    <div class="pagination__buttons">
+      <button [disabled]="pageParams.current_page <= 1" (click)="changePage(pageParams.current_page - 1)">
+        <i class="uil uil-angle-left"></i>
+      </button>
+      <button [disabled]="pageParams.current_page >= pageParams.last_page"
+        (click)="changePage(pageParams.current_page + 1)">
+        <i class="uil uil-angle-right"></i>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="table-container">
+  <div class="table-wrapper">
+    <table>
+      <thead class="thead-sticky thead-sortable">
+        <tr>
+          <th *ngIf="filter.type == 'document'" style="width: 515px;">{{'orders.num' | translate}}</th>
+          <th>{{ filter.type == 'document' ? ('documents.company_customer' | translate) : ('documents.company_name'
+            | translate) }}</th>
+          <th>
+            <div>
+              {{ filter.type === 'document' ? ('orders.ship_date' | translate) : ('date' | translate) }}
+              <div class="sort-buttons ml-2">
+                <i class="uil uil-arrow-up"
+                  [class.active]="filter.sort_type === (filter.type === 'document' ? 'ship_date' : 'date') && filter.sort === 'asc'"
+                  (click)="setSort(filter.type === 'document' ? 'ship_date' : 'date', 'asc')">
+                </i>
+                <i class="uil uil-arrow-down"
+                  [class.active]="filter.sort_type === (filter.type === 'document' ? 'ship_date' : 'date') && filter.sort === 'desc'"
+                  (click)="setSort(filter.type === 'document' ? 'ship_date' : 'date', 'desc')">
+                </i>
+              </div>
+            </div>
+          </th>
+          <th>
+            <div>
+              {{'orders.num_contr' | translate}}
+              <div class="sort-buttons ml-2" *ngIf="filter.type !== 'document'">
+                <i class="uil uil-arrow-up" [class.active]="filter.sort_type === 'number' && filter.sort === 'asc'"
+                  (click)="setSort('number', 'asc')">
+                </i>
+                <i class="uil uil-arrow-down" [class.active]="filter.sort_type === 'number' && filter.sort === 'desc'"
+                  (click)="setSort('number', 'desc')">
+                </i>
+              </div>
+            </div>
+          </th>
+          <th>
+            <div>
+              {{ filter.type == 'document' ? ('task.last_change' | translate) : ('sum' | translate)}}
+              <div class="sort-buttons ml-2" *ngIf="filter.type == 'document'">
+                <i class="uil uil-arrow-up" [class.active]="filter.sort_type === 'last_change' && filter.sort === 'asc'"
+                  (click)="setSort('last_change', 'asc')">
+                </i>
+                <i class="uil uil-arrow-down"
+                  [class.active]="filter.sort_type === 'last_change' && filter.sort === 'desc'"
+                  (click)="setSort('last_change', 'desc')">
+                </i>
+              </div>
+            </div>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of dataItems">
+          <td *ngIf="filter.type == 'document'">
+            <span class="checkbox-span-border" [ngClass]="{
+                    'active': item.status === 'Активен',
+                    'completed': item.status === 'Завершен',
+                     }"></span>
+            <div class="td-data document-directions">
+              <a class="td-data__link">
+                <p class="text bold">{{item.num}} · {{item.marwrut}}</p>
+              </a>
+              <div class="td-documents">
+                <a class="td-documents__title-link">
+                  <h3 class="td-documents__title" routerLink="/documents/{{item.id}}/document/all">{{'documents.all'
+                    | translate}}</h3>
+                </a>
+                <span class="documents__span-border" *ngIf="filter.type == 'document'"></span>
+                <ul class="td-documents__list" *ngIf="filter.type == 'document'">
+                  <li routerLink="/documents/{{item.id}}/document/avto">
+                    <a>{{'documents.avto' | translate}}</a>
+                  </li>
+                  <li routerLink="/documents/{{item.id}}/document/shipping">
+                    <a>{{'documents.shipping' | translate}}</a>
+                  </li>
+                  <li routerLink="/documents/{{item.id}}/document/docs">
+                    <a>{{'documents.title' | translate}}</a>
+                  </li>
+                  <li routerLink="/documents/{{item.id}}/document/signed">
+                    <a>{{'documents.docs' | translate}}</a>
+                  </li>
+                  <li routerLink="/documents/{{item.id}}/document/mailsc">
+                    <a>{{'documents.mailsc' | translate}}</a>
+                  </li>
+                </ul>
+              </div>
+              <span class="sub-text file_count "> {{'documents.file_count' | translate : {count: item.files_count ?
+                item.files_count : 0} }}</span>
+            </div>
+          </td>
+
+          <td>
+            <div class="td-data d-flex flex-column">
+              {{filter.type == 'document' ? item.customer : item.title}}
+              <div class="td-documents" *ngIf="filter.type !== 'document'">
+                <a class="td-documents__title-link" routerLink="/documents/{{item.id}}/{{filter.type}}/all">
+                  <h3 class="td-documents__title">{{'documents.all' | translate}}</h3>
+                </a>
+              </div>
+              <span *ngIf="filter.type !== 'document'" class="sub-text file_count"> {{'documents.file_count' | translate
+                : {count: item.files_count ?
+                item.files_count : 0} }}</span>
+            </div>
+          </td>
+          <td>
+            <div class="td-data">{{filter.type == 'document' ? item.ship_date : item.date }}</div>
+          </td>
+          <td>
+            <div class="td-data">{{filter.type == 'document' ? item.num_contr : item.number }}</div>
+          </td>
+          <td>
+            <div class="td-data">{{filter.type == 'document' ? (item.updated_at |date : 'dd.MM.YYYY') : item.summ}}
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="sweet_alert-content" [ngClass]="{'open': filterModal}">
+  <form (keydown.enter)="getDataItems()" class="sweet_alert-body" style="width: 600px;">
+    <h2 class="sweet_alert-title">{{ 'filter' | translate }}</h2>
+    <button class="close-alert" type="button" (click)="closeAlert()">
+      <i class="uil uil-times"></i>
+    </button>
+    <div class="sweet_alert-inner full" *ngIf="filter.type === 'document'">
+      <div class="row mb-3 mb-2">
+        <div class="col-sm-6">
+          <div class="form-group">
+            <label class="form-label">{{'orders.order_num' | translate}}:</label>
+            <input type="text" class="form-control" name="num" [(ngModel)]="filter.num">
+          </div>
+        </div>
+        <div class="col-sm-6">
+          <div class="form-group">
+            <label class="form-label">{{'orders.num_contr' | translate}}:</label>
+            <input type="text" class="form-control" name="num_contr" [(ngModel)]="filter.num_contr">
+          </div>
+        </div>
+      </div>
+      <div class="row mb-3 mb-2">
+        <div class="col-sm-6">
+          <div class="form-group">
+            <label class="form-label">{{'profile.company' | translate}}:</label>
+            <select class="form-control" name="customer" [(ngModel)]="filter.customer">
+              <option value="">{{'all_companies' | translate}}</option>
+              <option *ngFor="let item of companies" [value]="item.title">{{item.title}}</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-sm-6">
+          <div class="form-group">
+            <label class="form-label">{{'orders.ship_date' | translate}}:</label>
+            <div class="filter-datepicker date">
+              <input class="form-control" type="text" id="ship_date" name="ship_date" ngxDaterangepickerMd [autoApply]="true"
+                autocomplete="off" placeholder="{{ 'Все' | translate }}" [locale]="{ format: 'YYYY-MM-DD' }"
+                [singleDatePicker]="true" [(ngModel)]="filter.ship_date"
+                (change)="filterDateChanged(filter.ship_date, 'ship_date')" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sweet_alert-inner full" *ngIf="filter.type !== 'document'">
+      <div class="row mb-3 mb-2">
+        <div class="col-sm-6">
+          <div class="form-group">
+            <label class="form-label">{{'orders.num_contr' | translate}}:</label>
+            <input type="text" class="form-control" [(ngModel)]="filter.number" name="number">
+          </div>
+        </div>
+        <div class="col-sm-6">
+          <div class="form-group">
+            <label class="form-label">{{'date' | translate}}:</label>
+            <div class="filter-datepicker date">
+              <input class="form-control" type="text" id="date" name="date" ngxDaterangepickerMd [autoApply]="true"
+                autocomplete="off" placeholder="{{ 'Все' | translate }}" [locale]="{ format: 'YYYY-MM-DD' }"
+                [singleDatePicker]="true" [(ngModel)]="filter.date" (change)="filterDateChanged(filter.date, 'date')" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sweet_alert-buttons">
+      <button (click)="closeAlert()" type="button" class="btn btn-danger ml-3" [disabled]="loading">{{'cancel' |
+        translate}} <img *ngIf="loading" src="/assets/images/spinner.svg" class="spinner-load"></button>
+      <button (click)="getDataItems()" type="button" class="btn btn-primary ml-3" [disabled]="loading">{{'search' |
+        translate}} <img *ngIf="loading" src="/assets/images/spinner.svg" class="spinner-load"></button>
+    </div>
+  </form>
+</div>
+
+<div class="loading-page" *ngIf="loadingPage">
+  <img src="/assets/images/spinner.svg" class="spinner-load">
+</div>

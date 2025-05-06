@@ -1,0 +1,306 @@
+<div class="task-wrapper" *ngIf="data">
+  <div class="append-to-order mr-3">
+    <div class="task-detail-header">
+      <div class="task-detail-header__tile"><a routerLink="/tasks">{{'task.title' | translate}}</a>
+        <i class="uil uil-angle-right active"></i>
+        <span>{{data.task_number}}</span>
+      </div>
+      <div class="task-detail-header__operations" *ngIf="currentUser.id == data.client_id">
+        <button routerLink="/tasks/{{data.id}}/edit">{{'edit' | translate}}</button>
+      </div>
+    </div>
+
+    <div class="task-detail__task-name">
+      <div class="task-detail__task-name">
+        <h3 *ngIf="!editMode.title" (click)="editTask('title')">{{ data.title }}</h3>
+        <input class="form-control" *ngIf="editMode.title" [(ngModel)]="data.title"
+          (blur)="saveTask('title', data.title)" (keydown.enter)="saveTask('title', data.title)" />
+      </div>
+
+      <button *ngIf="!editMode.title" (click)="editTask('title')" class="btn">
+        <i class="uil uil-pen"></i>
+      </button>
+    </div>
+
+    <div class="task-detail__task-locations">
+      <p class="attach">{{ 'task.linked_order' | translate }}</p>
+      <p *ngIf="!editMode.invoice_id" class="locations">
+        {{ data.invoice.num }} · {{ data.invoice.marwrut }}
+      </p>
+
+      <ng-select *ngIf="editMode.invoice_id" style="min-width: 300px;" [items]="invoices" [clearable]="true"
+        placeholder="{{ 'task.search_order' | translate }}" [(ngModel)]="data.invoice_id"
+        (change)="saveInvoice(data.invoice_id)" (search)="onSearch($event)" [searchable]="true" [loading]="loading"
+        bindLabel="num" bindValue="id" [virtualScroll]="true">
+      </ng-select>
+
+      <button *ngIf="!editMode.invoice_id" (click)="editTask('invoice_id')" class="btn">
+        <i class="uil uil-pen"></i>
+      </button>
+    </div>
+
+    <div class="description-wrapper d-flex">
+      <p class="m-0" *ngIf="!editMode.message" [innerHTML]="data.message"></p>
+
+      <angular-editor *ngIf="editMode.message" name="text" [(ngModel)]="data.message"
+        [config]="editorConfig"></angular-editor>
+
+
+      <button *ngIf="!editMode.message" (click)="editTask('message')" class="btn p-0 ml-2">
+        <i class="uil uil-pen"></i>
+      </button>
+      <div *ngIf="editMode.message">
+        <button (click)="saveTask('message', data.message)" class="btn save">Save</button>
+        <button (click)="cancelEdit('message')" class="btn cancel">Cancel</button>
+      </div>
+    </div>
+
+    <div class="comments mt-4">
+      <div class="tabs">
+        <div class="tab" [ngClass]="{ 'active': activeTab === 'comments' }" (click)="setActiveTab('comments')">
+          {{ 'ticket.comments' | translate }}
+        </div>
+        <div class="tab" [ngClass]="{ 'active': activeTab === 'attachments' }" (click)="setActiveTab('attachments')">
+          {{ 'ticket.attachments' | translate }}
+        </div>
+        <div class="tab" [ngClass]="{ 'active': activeTab === 'history' }" (click)="setActiveTab('history')">
+          {{ 'history' | translate }}
+        </div>
+      </div>
+
+
+
+      <div *ngIf="activeTab == 'comments'" class="mt-4">
+        <form class="mt-4 d-flex gap-1">
+          <img class="account-logo" *ngIf="currentUser.photo" src="{{siteUrl}}/uploads/clients/{{currentUser.photo}}"
+            alt="{{currentUser.name}}">
+          <img class="account-logo" *ngIf="!currentUser.photo" src="/assets/images/default_avatar.svg"
+            alt="{{currentUser.name}}">
+          <div class="d-flex gap-1 w-100" style="flex-direction: column;">
+            <textarea class="form-control" [(ngModel)]="comment.message" name="message"
+              style=" padding: 10px; resize: none; background-color: transparent;" rows="4"
+              placeholder="{{'ticket.add_comment' | translate }}">
+                              </textarea>
+            <div class="d-flex gap-1 mb-3">
+              <button class="btn btn-primary" (click)="addComment()"
+                [disabled]="comment.message == '' || comment.message == null || loading">
+                <img *ngIf="loading" src="/assets/images/spinner.svg" class="spinner-load">
+                {{'send' | translate}}
+              </button>
+              <button class="btn btn-outline">{{'cancel' | translate}}</button>
+            </div>
+
+          </div>
+
+        </form>
+
+        <div *ngFor="let item of data.messages" class="comment d-flex gap-1 mb-3 mt-3">
+          <img class="account-logo" *ngIf="item.client || item.user.photo"
+            src="{{siteUrl}}/uploads/clients/{{item.client ? item.client.photo : item.user.photo}}"
+            alt="{{item.client ? item.client.photo : item.user.photo}}">
+
+          <img class="account-logo" *ngIf="!item.client && !item.user.photo" src="/assets/images/default_avatar.svg">
+          <div class="">
+            <div class="comment-author">{{item.client ? item.client.name : item.user.fullname}}
+              <span class="comment-date">{{item.created_at | date : "dd MMMM, HH:mm"}}</span>
+            </div>
+            <div class="comment-message">{{item.message}}</div>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="activeTab == 'attachments'" class="mt-4 mb-3">
+        <div class="attachments" *ngFor="let item of data.files">
+          <div class="attachment d-flex align-center gap-1 ">
+            <!-- <img src="/assets/images/Frame 265.png" alt=""> -->
+            <img class="file" src="{{siteUrl}}/uploads/tasks/{{item.filename}}" alt="{{item.filename}}">
+            <div>
+              <img class="mr-2 mb-2" src="/assets/images/jpg.png" alt="" width="20px" height="20px">
+              <span> {{item.original_name}}</span>
+              <div style="font-size: 12px; color:#8C8B98">
+                {{item.created_at | date : "dd.MM.yyyy"}}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="activeTab == 'history'" class="mt-4 mb-3">
+        <div class="history-item mb-3" *ngFor="let item of data.logs">
+          <img *ngIf="item.user && !item.user.photo" src="/assets/images/default_avatar.svg" alt="">
+          <img src="{{siteUrl}}/uploads/clients/{{item.user.photo}}" alt="" *ngIf="item.user && item.user.photo"
+            width="40px" height="40px">
+          <div>
+            <span class="author">{{item.user.name}}</span>
+            <span class="date">{{item.created_at | date : 'dd MMMM, HH:mm'}}</span>
+            <div>
+              <span class="info" *ngIf="item.action =='title'"> Изменено заголовок</span>
+              <span class="info" *ngIf="item.action =='invoice_id'"> Изменено привязанный заказ </span>
+              <span class="info" *ngIf="item.action =='message'"> Изменено описание </span>
+              <span class="info" *ngIf="item.action =='status'"> Изменён статус задачи с
+                '{{getStatusTitle(item.before_value)}}' на '{{getStatusTitle(item.after_value)}}' </span>
+              <span class="info" *ngIf="item.action =='priority'">Изменён приоритет задачи с '{{item.before_value |
+                translate}}' на '{{item.after_value | translate}}' </span>
+              <span class="info" *ngIf="item.action =='deadline'"> Изменено дедлайна с '{{item.before_value |
+                date : 'dd MMMM, HH:mm'}}' на '{{item.after_value | date : 'dd MMMM, HH:mm'}}'</span>
+              <span class="info" *ngIf="item.action =='execute_id'"> Изменено исполнителя </span>
+              <span class="info" *ngIf="item.action =='viewers'"> Изменено наблюдатели </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <hr class="d-mob">
+
+    </div>
+  </div>
+
+  <div class="detail">
+    <div class="d-flex align-center justify-between mb-3">
+      <span class="key">{{'status' | translate}}</span>
+      <span class="value">
+        <span *ngIf="currentUser.id != data.client_id">{{ getStatusTitle(data.status)}}</span>
+        <ng-select *ngIf="currentUser.id == data.client_id" class="w-100" [clearable]="false" [searchable]="false"
+          [placeholder]="'choose' | translate" [(ngModel)]="data.status"
+          (ngModelChange)="saveTask('status', data.status)">
+          <ng-option *ngFor="let status of statuses" [value]="status.val">{{status.title}}</ng-option>
+        </ng-select>
+      </span>
+    </div>
+    <div class="d-flex align-center justify-between mb-3">
+      <span class="key">{{'task.priority' | translate}}</span>
+      <span class="value">
+        <span *ngIf="currentUser.id != data.client_id">
+          <span class="priority-button"
+            [ngClass]="{'blue': data.priority == 'high', 'gray': data.priority == 'middle', 'red': data.priority == 'low'}">
+            <i
+              class="uil {{data.priority == 'high' ? 'uil-angle-double-up' : data.priority == 'middle' ? 'uil-grip-horizontal-line gray' : 'uil-angle-double-down'}}"></i>
+          </span>
+          {{ data.priority == 'high' ? 'Высокий' : data.priority == 'middle' ? 'Средний' : 'Низкий' }}
+        </span>
+        <ng-select *ngIf="currentUser.id == data.client_id" class="w-100" [clearable]="false" [searchable]="false"
+          [placeholder]="'choose' | translate" [(ngModel)]="data.priority"
+          (ngModelChange)="saveTask('priority', data.priority)">
+          <ng-option value="high">
+            <span class="priority-button blue">
+              <i class="uil uil-angle-double-up"></i>
+            </span>
+            Высокий
+          </ng-option>
+          <ng-option value="middle">
+            <span class="priority-button">
+              <i class="uil uil-grip-horizontal-line gray"></i>
+            </span>
+            Средний
+          </ng-option>
+
+          <ng-option value="low">
+            <span class="priority-button red">
+              <i class="uil uil-angle-double-down"></i>
+            </span>
+            Низкий
+          </ng-option>
+        </ng-select>
+      </span>
+    </div>
+    <div class="d-flex align-center justify-between mb-3">
+      <span class="key">{{'task.deadine' | translate}}</span>
+      <span class="value">
+        <span *ngIf="currentUser.id != data.client_id">{{data.deadline | date : 'dd MMMM, HH:mm'}}</span>
+        <input *ngIf="currentUser.id == data.client_id" class="form-control w-100" type="datetime-local"
+          [(ngModel)]="data.deadline" (ngModelChange)="saveTask('deadline', data.deadline)">
+      </span>
+    </div>
+    <hr>
+    <div class="d-flex align-center justify-between mb-3">
+      <span class="key">{{'ticket.author' | translate}}</span>
+      <span class="value ml-3">
+        <img *ngIf="currentUser && currentUser.photo" src="{{siteUrl}}/uploads/clients/{{currentUser.photo}}"
+          alt="Client Photo" width="30px" height="30px">
+        <img *ngIf="currentUser && !currentUser.photo" src="/assets/images/default_avatar.svg" alt="Client Photo"
+          width="30px" height="30px">
+        {{currentUser.name}}
+      </span>
+    </div>
+    <div class="d-flex align-center justify-between mb-3">
+      <span class="key">{{'task.executor' | translate}}</span>
+      <span class="value">
+        <div *ngIf="currentUser.id != data.client_id">
+          <img *ngIf="data.executor.photo" src="{{siteUrl}}/uploads/clients/{{data.executor.photo}}" alt="">
+          <img *ngIf="!data.executor.photo" src="/assets/images/default_avatar.svg" alt="">
+          {{data.executor.name}}
+        </div>
+
+        <ng-select *ngIf="currentUser.id == data.client_id" [searchable]="false" class="ng-select-table w-100"
+          [clearable]="false" [placeholder]="'choose' | translate" [(ngModel)]="data.execute_id"
+          (ngModelChange)="saveTask('execute_id', data.execute_id)">
+          <ng-option *ngFor="let item of collegues" [value]="item.id">
+            <img *ngIf="item.photo" src="{{siteUrl}}/uploads/clients/{{item.photo}}" alt="">
+            <img *ngIf="!item.photo" src="/assets/images/default_avatar.svg" alt="">
+            {{item.name}}
+          </ng-option>
+        </ng-select>
+      </span>
+    </div>
+    <div class="d-flex justify-between mb-3">
+      <span class="key">{{'task.viewer' | translate}}</span>
+      <span class="value d-flex flex-column">
+        <span class="viewer-item d-flex align-center mb-2 ml-2" *ngFor="let viewer of getSelectedViewers()">
+          <img *ngIf="viewer.photo" [src]="siteUrl + '/uploads/clients/' + viewer.photo" alt="Viewer Photo" width="30px"
+            height="30px">
+          <img *ngIf="!viewer.photo" src="/assets/images/default_avatar.svg" alt="Default Avatar" width="30px"
+            height="30px">
+          {{ viewer.name }}
+        </span>
+        <button *ngIf="currentUser.id == data.client_id" class="btn blue mt-1 p-0 d-block"
+          style="text-align: left !important;" (click)="openAlert()">
+          {{ 'task.change_viewer' | translate }}
+        </button>
+      </span>
+
+    </div>
+    <hr *ngIf="data.id">
+    <div class="d-flex align-center justify-between mb-3" *ngIf="data.id">
+      <span class="key">{{'task.id' | translate}}</span>
+      <span class="value">{{data.id}}</span>
+    </div>
+    <div class="d-flex align-center justify-between mb-3" *ngIf="data.id">
+      <span class="key">{{'created_at' | translate}}</span>
+      <span class="value">{{data.created_at | date : 'dd MMMM, HH:mm'}}</span>
+    </div>
+    <div class="d-flex align-center justify-between mb-3" *ngIf="data.id">
+      <span class="key">{{'task.updated' | translate}}</span>
+      <span class="value">{{data.updated_at | date : 'dd MMMM, HH:mm'}}</span>
+    </div>
+    <div class="d-flex align-center justify-between mb-3" *ngIf="data.id">
+      <span class="key">{{'task.last_change' | translate}}</span>
+      <span class="value" *ngIf="data?.lastupd && data?.lastupd?.name">
+        <img *ngIf="data?.lastupd && !data?.lastupd?.photo" src="/assets/images/default_avatar.svg" alt="">
+        <img *ngIf="data?.lastupd && data?.lastupd?.photo" src="{{siteUrl}}/uploads/clients/{{data?.lastupd?.photo}}"
+          alt="">
+        {{data?.lastupd?.name }}
+      </span>
+    </div>
+  </div>
+
+</div>
+
+<div class="sweet_alert-content" [ngClass]="{'open':alertShow}" *ngIf="data">
+  <div class="sweet_alert-body">
+    <h2 class="sweet_alert-title">{{'task.change_viewer' | translate}}</h2>
+    <button class="close-alert" type="button" (click)="closeAlert()"><i class="uil uil-times"></i></button>
+    <div class="sweet_alert-inner full">
+      <ng-select [multiple]="true" [searchable]="false" class="ng-select-table w-100" [clearable]="false"
+        [placeholder]="'choose' | translate" [(ngModel)]="data.viewers">
+        <ng-option *ngFor="let item of collegues" [value]="item.id">
+          <img *ngIf="item.photo" src="{{siteUrl}}/uploads/clients/{{item.photo}}" alt="" width="30px" height="30px" />
+          <img *ngIf="!item.photo" src="/assets/images/default_avatar.svg" alt="" width="30px" height="30px" />
+          {{ item.name }}
+        </ng-option>
+      </ng-select>
+    </div>
+    <div class="sweet_alert-buttons">
+      <button type="button" class="btn btn-danger ml-3" [disabled]="loading" (click)="closeAlert()">{{'cancel' |
+        translate}} <img *ngIf="loading" src="/assets/images/spinner.svg" class="spinner-load"></button>
+      <button type="button" class="btn btn-primary ml-3" [disabled]="loading" (click)="saveViewers()">{{'save' |
+        translate}} <img *ngIf="loading" src="/assets/images/spinner.svg" class="spinner-load"></button>
+    </div>
+  </div>
+</div>

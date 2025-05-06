@@ -1,0 +1,112 @@
+<div class="content-header" *ngIf="isColleaguesRoute">
+  <h2 class="page-title">{{'collegues.title' | translate}}</h2>
+
+  <div class="d-flex gap-1" *ngIf="currentUser.role == 'client'">
+    <button class="btn btn-outline" (click)="changeStatus()">
+      <span>{{ filter.status === '' ? ('archive' | translate) : ('orders.active' | translate)}}</span>
+    </button>
+    <button class="btn btn-primary" routerLink="/colleagues/add">
+      <i class="uil uil-user-plus"></i>
+      <span>{{'collegues.add' | translate}}</span>
+    </button>
+  </div>
+</div>
+
+<div class="content-filter">
+  <div class="content-filter">
+    <div class="form-group">
+      <div class="input_icons">
+        <i class="uil uil-search"></i>
+        <input class="form-control" type="text" placeholder="{{'search' | translate}}" [(ngModel)]="filter.name"
+          (ngModelChange)="search()" style="background-color: transparent;" />
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="table-container">
+  <div class="table-wrapper">
+    <table>
+      <thead class="thead-sticky">
+        <tr>
+          <th>Имя пользователя</th>
+          <th>Телефон</th>
+          <th>Эл.почта</th>
+          <th>Должность</th>
+          <th>Отдел</th>
+          <th>Посл. посещение</th>
+          <th *ngIf="isColleaguesRoute">Действия</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of dataItems">
+          <td>
+            <div class="td-data account">
+              <img *ngIf="!item.photo" src="./assets/images/default_avatar.svg" alt="account-logo" width="30"
+                height="30">
+              <img *ngIf="item.photo" src="{{siteUrl}}/uploads/clients/{{item.photo}}" alt="account-logo" width="30"
+                height="30">
+              <a class="td-data__link" routerLink="/colleagues/{{item.id}}/profile">
+                <p class="text bold">{{item.name}}</p>
+              </a>
+            </div>
+          </td>
+          <td>
+            <div class="td-data account">{{item.phone}}</div>
+          </td>
+          <td>
+            <div class="td-data account">{{item.email}}</div>
+          </td>
+          <td>
+            <div class="td-data account">{{item.job}}</div>
+          </td>
+          <td>
+            <div class="td-data account">{{item.department}}</div>
+          </td>
+          <td>
+            <div class="td-data account">{{item.lastseen | date : "dd MMMM YYYY HH:mm"}}</div>
+          </td>
+          <td *ngIf="isColleaguesRoute">
+            <div class="td-data operations  account">
+              <ul class="operations__list">
+                <li routerLink="/colleagues/{{item.id}}/profile">
+                  <button>
+                    <i class=" uil uil-pen"></i>
+                  </button>
+                </li>
+                <!-- <li routerLink="/colleagues/{{item.id}}/profile">
+                    <button>
+                      <i class="uil uil-comment"></i>
+                    </button>
+                  </li> -->
+                <!-- <li routerLink="/colleagues/{{item.id}}/tasks">
+                  <button>
+                    <i class="uil uil-check-circle"></i>
+                  </button>
+                </li> -->
+                <!-- <li>
+                    <button>
+                      <i class="uil uil-ellipsis-h"></i>
+                    </button>
+                  </li> -->
+              </ul>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="dataItems && dataItems.length === 0">
+          <td colspan="7" class="text-center">
+            <div class="d-flex flex-column align-center mt-3 mb-3">
+              <img src="./assets/images/no_data.png" alt="" width="64" height="64">
+              <span class="mt-2">{{ 'no_data' | translate }}</span>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<div class="loading-page" *ngIf="loadingPage">
+  <img src="/assets/images/spinner.svg" class="spinner-load">
+</div>

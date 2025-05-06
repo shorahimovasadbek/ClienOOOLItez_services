@@ -1,0 +1,394 @@
+<div class="content-header">
+    <h1 class="page-title">{{'finance.title' | translate}}</h1>
+
+    <div class="content-header__status-filters filter">
+        <div class="filter">
+            <ul class="filters">
+                <li *ngFor="let item of statuses">
+                    <button class="btn btn-light" [ngClass]="{'selected': item.checked}" (click)="updateStatus(item)">
+                        {{ item.val | translate }}
+                        <i class="uil uil-times close"></i>
+                    </button>
+                </li>
+                <span class="seperator-border"></span>
+                <li *ngFor="let item of transactions">
+                    <button class="btn btn-light" [ngClass]="{'selected': item.checked}" (click)="selectedStatus(item)">
+                        {{ item.title | translate }}
+                        <i class="uil uil-times close"></i>
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <button [ngClass]="{
+                'btn-primary': selectedItems.length !== 0, 
+                'btn-white': selectedItems.length === 0
+              }" class="btn" class="btn" (click)="exportData()">
+        <i class="uil uil-export"></i>
+        <span class="d-web">{{'orders.export' | translate}}</span>
+    </button>
+</div>
+    <div class="content-filter">
+        <div class="form-group">
+            <div class="input_icons">
+                <i *ngIf="filter.from_date" class="uil uil-times clear-icon" (click)="clearDate()"></i>
+                <input class="form-control date-range" style="background: transparent !important;" type="text" id="date"
+                    ngxDaterangepickerMd [autoApply]="true" autocomplete="off" [closeOnAutoApply]="true"
+                    placeholder="{{ 'orders.all_period' | translate }}" [locale]="{ format: 'DD/MM/YYYY' }"
+                    [(ngModel)]="selectedDateRange" (ngModelChange)="onDateRangeChange($event)" />
+                <i class="uil uil-calender"></i>
+            </div>
+        </div>
+        <div class="button-group">
+            <button class="btn btn-outline" (click)="filterModal = !filterModal">
+                <i class="uil uil-filter"></i>
+                <span>{{'filter' | translate}}</span>
+            </button>
+    
+            <button class="btn btn-outline" (click)="resetFilter()">
+                <i class="uil uil-filter-slash"></i>
+                <span>{{'reset' | translate}}</span>
+            </button>
+        </div>
+        <div class="pagination">
+            <p class="pagination__count-text d-web">
+                {{ 'pagination_count_text' | translate: { from: pageParams.from, to: pageParams.to, total:
+                pageParams.total } }}
+            </p>
+            <ng-select [searchable]="false" [clearable]="false" [(ngModel)]="filter.per_page"
+                (change)="updatePageSize($event)">
+                <ng-option *ngFor="let option of [30, 50, 100]" [value]="option">
+                    {{ 'per_page_count' | translate: { count: option } }}
+                </ng-option>
+            </ng-select>
+    
+            <div class="pagination__buttons">
+                <button [disabled]="pageParams.current_page <= 1" (click)="changePage(pageParams.current_page - 1)">
+                    <i class="uil uil-angle-left"></i>
+                </button>
+                <button [disabled]="pageParams.current_page >= pageParams.last_page"
+                    (click)="changePage(pageParams.current_page + 1)">
+                    <i class="uil uil-angle-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <ul class="amount-balances-list">
+        <li class="amount-balances-list__item balance-item inflow">
+            <div class="balance-item__header">
+                <img src="/assets/images/plus-green.svg" alt="plus-icons" width="15" height="15">
+                <p class="balance-item__text">{{'finance.balance_invoice' | translate}}</p>
+            </div>
+            <ul class="balance_item__list">
+                <li *ngFor="let item of balances?.invoice">
+                    <span class="currency-code">{{item.currency}}</span>
+                    <p class="amount">{{item.amount | number}}</p>
+                </li>
+            </ul>
+        </li>
+    
+        <li class="amount-balances-list__item balance-item overdue">
+            <div class="balance-item__header">
+                <img src="/assets/images/minus-red.svg" alt="plus-icons" width="15" height="15">
+                <p class="balance-item__text">{{'finance.balance_dept' | translate}}</p>
+            </div>
+            <ul class="balance_item__list">
+                <li *ngFor="let item of balances?.dept">
+                    <span class="currency-code">{{item.currency}}</span>
+                    <p class="amount">{{item.amount | number}}</p>
+                </li>
+            </ul>
+        </li>
+    
+        <li class="amount-balances-list__item balance-item debt">
+            <div class="balance-item__header">
+                <img src="/assets/images/clock-grey.svg" alt="plus-icons" width="15" height="15">
+                <p class="balance-item__text">{{'finance.balance_expired' | translate}}</p>
+            </div>
+            <ul class="balance_item__list">
+                <li *ngFor="let item of balances?.expired">
+                    <span class="currency-code">{{item.currency}}</span>
+                    <p class="amount">{{item.amount | number}}</p>
+                </li>
+            </ul>
+        </li>
+    </ul>
+    
+    <div class="table-container">
+        <div class="table-wrapper">
+            <table>
+                <thead class="thead-sticky thead-sortable">
+                    <tr>
+                        <th class="checkbox">
+                            <input id="all" class="checkbox-input" type="checkbox" [checked]="allSelected"
+                                (change)="toggleAllSelection()">
+                            <label for="all" class="checkbox-label" style="padding-bottom: 10px; margin: 0 auto;"></label>
+                        </th>
+                        <th>{{'finance.num' | translate}}</th>
+                        <th>
+                            <div>
+                                {{'finance.prepayment' | translate}}
+    
+                            </div>
+                            <div class="sort-buttons ml-2">
+                                <i class="uil uil-arrow-up"
+                                    [class.active]="filter.sort_type === 'prepayment' && filter.sort === 'asc'"
+                                    (click)="setSort('prepayment', 'asc')">
+                                </i>
+                                <i class="uil uil-arrow-down"
+                                    [class.active]="filter.sort_type === 'prepayment' && filter.sort === 'desc'"
+                                    (click)="setSort('prepayment', 'desc')">
+                                </i>
+                            </div>
+    
+                        </th>
+                        <th>
+                            <div>
+                                {{'finance.schet' | translate}}
+                            </div>
+                            <div class="sort-buttons ml-2">
+                                <i class="uil uil-arrow-up"
+                                    [class.active]="filter.sort_type === 'schet' && filter.sort === 'asc'"
+                                    (click)="setSort('schet', 'asc')">
+                                </i>
+                                <i class="uil uil-arrow-down"
+                                    [class.active]="filter.sort_type === 'schet' && filter.sort === 'desc'"
+                                    (click)="setSort('schet', 'desc')">
+                                </i>
+                            </div>
+                        </th>
+                        <th>
+                            <div>
+                                {{'finance.all_prepayment' | translate}}
+    
+                            </div>
+                            <div class="sort-buttons ml-2">
+                                <i class="uil uil-arrow-up"
+                                    [class.active]="filter.sort_type === 'all_prepayment' && filter.sort === 'asc'"
+                                    (click)="setSort('all_prepayment', 'asc')">
+                                </i>
+                                <i class="uil uil-arrow-down"
+                                    [class.active]="filter.sort_type === 'all_prepayment' && filter.sort === 'desc'"
+                                    (click)="setSort('all_prepayment', 'desc')">
+                                </i>
+                            </div>
+                        </th>
+                        <th>
+                            <div>
+                                {{'finance.dept' | translate}}
+    
+                            </div>
+                            <div class="sort-buttons ml-2">
+                                <i class="uil uil-arrow-up"
+                                    [class.active]="filter.sort_type === 'dept' && filter.sort === 'asc'"
+                                    (click)="setSort('dept', 'asc')">
+                                </i>
+                                <i class="uil uil-arrow-down"
+                                    [class.active]="filter.sort_type === 'dept' && filter.sort === 'desc'"
+                                    (click)="setSort('dept', 'desc')">
+                                </i>
+                            </div>
+                        </th>
+                        <th>
+                            <div>
+                                {{'finance.diff_days' | translate}}
+                            </div>
+                            <div class="sort-buttons ml-2">
+                                <i class="uil uil-arrow-up"
+                                    [class.active]="filter.sort_type === 'diff_days' && filter.sort === 'asc'"
+                                    (click)="setSort('diff_days', 'asc')">
+                                </i>
+                                <i class="uil uil-arrow-down"
+                                    [class.active]="filter.sort_type === 'diff_days' && filter.sort === 'desc'"
+                                    (click)="setSort('diff_days', 'desc')">
+                                </i>
+                            </div>
+                        </th>
+                        <th>
+                            <div>
+                                {{'finance.ship_date' | translate}}
+                            </div>
+                            <div class="sort-buttons ml-2">
+                                <i class="uil uil-arrow-up"
+                                    [class.active]="filter.sort_type === 'ship_date' && filter.sort === 'asc'"
+                                    (click)="setSort('ship_date', 'asc')">
+                                </i>
+                                <i class="uil uil-arrow-down"
+                                    [class.active]="filter.sort_type === 'ship_date' && filter.sort === 'desc'"
+                                    (click)="setSort('ship_date', 'desc')">
+                                </i>
+                            </div>
+                        </th>
+                        <th>{{'finance.customer' | translate}}</th>
+                        <th>{{'finance.num_contr' | translate}}</th>
+                        <th>{{'finance.ord_num' | translate}}</th>
+                        <th>{{'finance.invoice' | translate}}</th>
+                    </tr>
+    
+                </thead>
+                <tbody>
+                    <tr *ngFor="let item of dataItems; let i = index;">
+                        <td>
+                            <div class="td-data checkbox">
+                                <input class="checkbox-input" type="checkbox" id="checkbox{{item.id}}"
+                                    [(ngModel)]="item.selected" (change)="onCheckboxChange(item)">
+                                <label class="checkbox-label" for="checkbox{{item.id}}"></label>
+                                <span class="checkbox-span-border"
+                                    [ngClass]="{completed: item.status == 'Завершен' , active: item.status == 'Активные' }"></span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="td-data" [class.text-wrap]="expandedRow === i">
+                                <p class="text"><span class="bold">{{item.num}}</span> · {{item.marwrut}}</p>
+
+                                <ul class="route-list">
+                                    <li>
+                                      <button routerLink="/documents/{{item.id}}/document/all">
+                                        <i class="uil uil-file blue"></i>
+                                        <p class="route-list-text">{{'sidebar.documents' | translate}}</p>
+                                        <i class="uil uil-plus blue"></i>
+                                      </button>
+                                    </li>
+                                    <li>
+                                      <button
+                                        class="read-more blue"
+                                        (click)="toggleRowExpansion(i)"
+                                      >
+                                        <span
+                                          >{{ expandedRow === i ? ('hide' | translate) : ('read_more' | translate) }}</span
+                                        >
+                                        <i
+                                          [class]="expandedRow === i ? 'uil uil-angle-up' : 'uil uil-angle-down'"
+                                        ></i>
+                                      </button>
+                                    </li>
+                                  </ul>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="td-data">
+                                <p class="text success">+ {{item.prepayment | number}} {{item.currency}}</p>
+                                <span class="sub-text"> {{"from_date" | translate:{date: (item.date |
+                                    date:'dd.MM.yy')} }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="td-data">{{item.schet | number}} {{item.currency_6}}</div>
+                        </td>
+                        <td>
+                            <div class="td-data">{{item.all_prepayment | number}} {{item.currency_6}}</div>
+                        </td>
+                        <td>
+                            <div class="td-data">
+                                <p class="text danger">{{item.dept | number}} {{item.currency_6}}</p>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="td-data">
+                                <p class="text" [ngClass]="item.diff_days <= 0 ? 'danger' : ''">
+                                    {{ item.diff_days <= 0 ? ('overdue' | translate) : ('remaining_days' | translate:{days:
+                                        item.diff_days}) }} </p>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="td-data">{{item.ship_date | date: 'dd.MM.yyyy'}}</div>
+                        </td>
+                        <td>
+                            <div class="td-data">{{item.customer}}</div>
+                        </td>
+                        <td>
+                            <div class="td-data">
+                                <p class="text">{{item.num_contr}}</p>
+                                <span class="sub-text" *ngIf="item.num_contr_date"> {{"from_date" | translate:{date: (item.num_contr_date |
+                                    date:'dd.MM.yy')} }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="td-data">
+                                <p class="text">{{item.ord_num}}</p>
+                                <span class="sub-text" *ngIf="item.ord_date"> {{"from_date" | translate:{date: (item.ord_date |
+                                    date:'dd.MM.yy')} }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="td-data">
+                                <p class="text">{{item.invoice}}</p>
+                                <span class="sub-text" *ngIf="item.act_date"> {{"from_date" | translate:{date:
+                                    (item.act_date | date:'dd.MM.yy')} }}</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+<!-- Filter Modal -->
+<div class="sweet_alert-content" [ngClass]="{'open': filterModal}">
+    <form (keydown.enter)="getDataItems()" class="sweet_alert-body" style="width: 800px;">
+        <h2 class="sweet_alert-title">{{ 'filter' | translate }}</h2>
+        <button class="close-alert" type="button" (click)="closeAlert()">
+            <i class="uil uil-times"></i>
+        </button>
+        <div class="sweet_alert-inner full">
+
+            <div class="row">
+                <div class="col-sm-4 mb-2">
+                    <div class="form-group">
+                        <label class="form-label">{{'orders.order_num' | translate}}:</label>
+                        <input type="text" name="num" class="form-control" [(ngModel)]="filter.num">
+                    </div>
+                </div>
+                <div class="col-sm-4 mb-2">
+                    <div class="form-group">
+                        <label class="form-label">{{'finance.num_contr' | translate}}:</label>
+                        <input type="text" name="num_contr" class="form-control" [(ngModel)]="filter.num_contr">
+                    </div>
+                </div>
+                <div class="col-sm-4 mb-2">
+                    <div class="form-group">
+                        <label class="form-label">{{'finance.ord_num' | translate}}:</label>
+                        <input type="text" name="ord_num" class="form-control" [(ngModel)]="filter.ord_num">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-4 mb-2">
+                    <div class="form-group">
+                        <label class="form-label">{{'finance.date_prepayment' | translate}}:</label>
+                        <div class="filter-datepicker date">
+                            <input class="form-control" type="date" placeholder="{{ 'Все' | translate }}" name="date"
+                                [(ngModel)]="filter.date" />
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-4 mb-2">
+                    <div class="form-group">
+
+                        <label class="form-label">{{'date_loading' | translate}}:</label>
+                        <div class="filter-datepicker date">
+                            <input class="form-control" type="date" placeholder="{{ 'Все' | translate }}" name="ship_date" 
+                                [(ngModel)]="filter.ship_date" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sweet_alert-buttons">
+                <button (click)="closeAlert()" type="button" class="btn btn-danger ml-3" [disabled]="loading">{{'cancel'
+                    |
+                    translate}} <img *ngIf="loading" src="/assets/images/spinner.svg" class="spinner-load"></button>
+                <button (click)="getDataItems()" type="button" class="btn btn-primary ml-3"
+                    [disabled]="loading">{{'search'
+                    |
+                    translate}} <img *ngIf="loading" src="/assets/images/spinner.svg" class="spinner-load"></button>
+            </div>
+        </div>
+    </form>
+</div>
+<div class="loading-page" *ngIf="loadingPage">
+    <img src="/assets/images/spinner.svg" class="spinner-load">
+</div>

@@ -1,0 +1,671 @@
+<div class="document-detail-header" *ngIf="data">
+  <div class="document-detail-header__title"><a routerLink="/documents">{{'documents.title' | translate }}</a>
+    <i class="uil uil-angle-right"></i>
+    <span>{{ type == 'document' ? data.num : data.title}}</span>
+    <div class="document-detail-header__location" *ngIf="type == 'document'">
+      <p>{{data.marwrut}}</p>
+    </div>
+  </div>
+</div>
+<div class="buttons d-mob w-100">
+  <button class="btn btn-outline mt-2 mb-2 w-100" (click)="showDetailOrder()">
+    <i class="uil uil-info-circle"></i>
+    {{ type == 'document' ? ('detail_order' | translate) :
+    ('documents.detail_company' | translate)}}</button>
+</div>
+
+<div class="document-detail__body" *ngIf="data">
+  <div class="documents-details">
+    <div class="documents-details__header">
+      <ul class="documents-details__list">
+        <li [class.active]="activeFilter === 'all'" (click)="filterFiles('all')">
+          <span class="border" *ngIf="type == 'document'"></span>
+          <button>
+            {{ 'documents.all' | translate }}
+            <span *ngIf="data.files?.length > 0"> ({{ data.files.length }})</span>
+          </button>
+        </li>
+        <li [class.active]="activeFilter === 'avto'" (click)="filterFiles('avto')" *ngIf="type == 'document'">
+          <button>
+            {{ 'documents.avto' | translate }}
+            <span *ngIf="getCountByType('avto') > 0"> ({{ getCountByType('avto') }})</span>
+          </button>
+        </li>
+        <li [class.active]="activeFilter === 'shipping'" (click)="filterFiles('shipping')" *ngIf="type == 'document'">
+          <button>
+            {{ 'documents.shipping' | translate }}
+            <span *ngIf="getCountByType('shipping') > 0"> ({{ getCountByType('shipping') }})</span>
+          </button>
+        </li>
+        <li [class.active]="activeFilter === 'docs'" (click)="filterFiles('docs')" *ngIf="type == 'document'">
+          <button>
+            {{ 'documents.title' | translate }}
+            <span *ngIf="getCountByType('docs') > 0"> ({{ getCountByType('docs') }})</span>
+          </button>
+        </li>
+        <li [class.active]="activeFilter === 'signed'" (click)="filterFiles('signed')" *ngIf="type == 'document'">
+          <button>
+            {{ 'documents.docs' | translate }}
+            <span *ngIf="getCountByType('signed') > 0"> ({{ getCountByType('signed') }})</span>
+          </button>
+        </li>
+        <li [class.active]="activeFilter === 'mailsc'" (click)="filterFiles('mailsc')" *ngIf="type == 'document'">
+          <button>
+            {{ 'documents.mailsc' | translate }}
+            <span *ngIf="getCountByType('mailsc') > 0"> ({{ getCountByType('mailsc') }})</span>
+          </button>
+        </li>
+      </ul>
+
+      <div class="documents-details__operations">
+        <button class="download" (click)="downloadDocuments()" [disabled]="loading">
+          <i class="uil uil-import"></i>
+          <span>{{'download' | translate}}</span>
+          <img *ngIf="loading" src="/assets/images/spinner.svg" class="spinner-load">
+        </button>
+
+        <div class=" me-3">
+          <div ngbDropdown role="group" aria-label="Button group with nested dropdown">
+            <button type="button" class="download" ngbDropdownToggle>
+              <i class="uil uil-navigator"></i> {{'send' | translate}}
+            </button>
+            <div class="dropdown-menu" ngbDropdownMenu>
+              <button class="download" ngbDropdownItem (click)="shareFiles('tg')" style="width: 100%;">
+                <i class="uil uil-telegram me-2" style="color: #0088cc;"></i> Telegram
+              </button>
+              <button class="download" ngbDropdownItem (click)="shareFiles('wa')" style="width: 100%;">
+                <i class="uil uil-whatsapp me-2" style="color: #25D366;"></i> WhatsApp
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- <button class="upload" [disabled]="loading" *ngIf="activeFilter === 'signed'" (click)="triggerFileInput()">
+          <i class="uil uil-upload"></i>
+          <span>{{'upload' | translate}}</span>
+          <img *ngIf="loading" src="/assets/images/spinner.svg" class="spinner-load">
+        </button>
+        <input type="file" id="fileInput" class="hidden" (change)="onFileChange($event)" /> -->
+      </div>
+    </div>
+    <div class="documents-details__body">
+
+      <div class="documents-details__body-inner">
+        <p class="files-count">{{'documents.file_count_inner' | translate : {count: filteredFiles ?
+          filteredFiles.length : 0} }}</p>
+        <ul>
+          <li class="doc-detail-item" [ngClass]="file.selected ? 'selected' : ''" *ngFor="let file of filteredFiles"
+            [class.checked]="file.checked" (click)="onFileClick(file)">
+            <img class="doc-detail-item-jpg" *ngIf="file.mime_type == 'jpg'"
+              src="{{siteUrl}}/uploads/documents/{{file.type}}/{{file.filename}}" alt="document image" width="70"
+              height="70">
+            <img *ngIf="file.mime_type !== 'jpg'" src="./assets/images/{{file.mime_type}}-frame.png"
+              alt="document image" width="70" height="70">
+
+            <div class="doc-detail-item__inner">
+              <div class="doc-detail-item__inner-header">
+                <div class="doc-detail-item__inner-header-img">
+                  <img src="./assets/images/{{file.mime_type}}.png" alt="photo type icon" width="16" height="20">
+                  <p>{{file.original_name}}</p>
+                </div>
+                <div class="checkbox">
+                  <input class="checkbox-input" type="checkbox" id="checkbox{{file.id}}" [(ngModel)]="file.checked"
+                    (change)="updateCheckedFileCount()">
+                  <label class="checkbox-label" for="checkbox{{file.id}}"></label>
+                </div>
+              </div>
+              <div class="text-wrapper w-100">
+                <p class="status" *ngIf="file.type">{{ 'documents.' + file.type | translate}} · </p>
+                <p class="date" *ngIf="file.date">{{file.date}} · </p>
+                <p class="doc-size" *ngIf="file.size">{{file.size}}</p>
+              </div>
+              <div class="bottom-wrapper">
+                <div class="comment">
+                  <i class="uil uil-comment"></i>
+                  <p class="comment-text">{{file.comment ? file.comment : ('no_comment' | translate)}}</p>
+                </div>
+                <div class="comment-date" *ngIf="file.send_date">
+                  <i class="uil uil-navigator"></i>
+                  <p>{{file.send_date}}</p>
+                </div>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <div class="truck-image-wrapper d-web" style="overflow: auto;">
+        <a *ngIf="selectedFile" [href]="getFileUrl(selectedFile)" target="_blank" rel="noopener noreferrer">
+          <button class="fullscreen-btn mb-2 mt-2 w-100">
+            <i class="uil uil-expand-arrows mr-2"></i>
+            <span>{{ 'full_screen' | translate }}</span>
+          </button>
+        </a>
+        <div class="mb-3 text-start" *ngIf="selectedFile && (selectedFile.mime_type == 'image' || selectedFile.mime_type == 'jpg' || selectedFile.mime_type == 'png')"><button class="fullscreen-btn" type="button" (click)="rotate(selectedFile)">Повернуть</button></div>
+        <img *ngIf="selectedFile && selectedFile.section !== 'customer' && selectedFile.mime_type == 'jpg'" [style.transform]="'rotate('+selectedFile.rotate+'deg)'" 
+          [src]="getSelectedFileImage()" [alt]="getSelectedFileImage()" >
+        <ngx-doc-viewer
+          *ngIf="selectedFile && selectedFile.section !== 'customer' && selectedFile.mime_type != 'image' && selectedFile.mime_type != 'jpg' && selectedFile.mime_type != 'png' && selectedFile.mime_type != 'pdf'"
+          [url]="siteUrl + '/uploads/documents/' + selectedFile.type + '/' + selectedFile.filename" viewer="google"
+          style="width:100%;height:100vh;"></ngx-doc-viewer>
+        <ngx-doc-viewer
+          *ngIf="(selectedFile && selectedFile.section !== 'customer') && (selectedFile.mime_type == 'pdf')"
+          [url]="siteUrl + '/uploads/documents/' + 'docs' + '/' + selectedFile.filename" viewer="pdf"
+          style="width:100%;height:100vh;"></ngx-doc-viewer>
+
+
+        <ngx-doc-viewer
+          *ngIf="selectedFile && selectedFile.section == 'customer' && selectedFile.mime_type != 'image' && selectedFile.mime_type != 'jpg' && selectedFile.mime_type != 'png' && selectedFile.mime_type != 'pdf'"
+          [url]="siteUrl + selectedFile.container + selectedFile.filename" viewer="google"
+          style="width:100%;height:100vh;"></ngx-doc-viewer>
+        <ngx-doc-viewer
+          *ngIf="(selectedFile && selectedFile.section == 'customer') && (selectedFile.mime_type == 'pdf')"
+          [url]="siteUrl + selectedFile.container + selectedFile.filename" viewer="pdf"
+          style="width:100%;height:100vh;"></ngx-doc-viewer>
+
+      </div>
+
+    </div>
+  </div>
+  <div class="document-order-details d-web">
+    <div class="document-order-details__header">
+      <h3 class="document-order-details__header-title">{{ type == 'document' ? ('detail_order' | translate) :
+        ('documents.detail_company' | translate)}} {{data.num}}</h3>
+      <!-- <button>
+            <i class="uil uil-pen"></i>
+          </button> -->
+    </div>
+    <div class="document-order-details__body">
+      <ul class="order-detail-list" *ngIf="type == 'document'">
+        <li>
+          <p class="name">{{'status' | translate}}</p>
+          <div>
+            <p class="description status">{{data.status}}</p>
+          </div>
+        </li>
+        <li>
+          <p class="name">{{'orders.order_num' | translate}}</p>
+          <div>
+            <p class="description">{{data.num}}</p>
+          </div>
+        </li>
+        <li>
+          <p class="name"></p>
+          <div>
+            <p class="description"></p>
+          </div>
+        </li>
+        <li>
+          <p class="name">{{'orders.route' | translate}}</p>
+          <div>
+            <p class="description">{{data.marwrut}}</p>
+          </div>
+        </li>
+        <li>
+          <p class="name">{{'orders.customer' | translate}}</p>
+          <div>
+            <p class="description">{{data.customer}}</p>
+          </div>
+        </li>
+        <li>
+          <p class="name">{{'orders.tovar' | translate}}</p>
+          <div>
+            <p class="description"> {{data.tovar}} </p>
+            <ul class="inner-list" *ngIf="data.products && data.products.length > 0">
+              <li class="inner-list__item">
+                <i class="uil uil-info-circle blue"></i>
+                <a>{{'orders.tovar' | translate}} ({{data.products.length}})</a>
+              </li>
+            </ul>
+          </div>
+        </li>
+        <li *ngIf="data.products && data.products.length > 0">
+          <p class="name">{{'orders.weight_volume' | translate}}</p>
+          <div>
+            <p class="description" *ngFor="let pr of data.products"> {{pr.volume}} м3 / {{pr.qty}}
+              {{pr.package}}</p>
+          </div>
+        </li>
+        <li>
+          <p class="name">{{'orders.tamojni' | translate}}</p>
+          <div>
+            <p class="description">{{data.tamojni}}</p>
+            <ul class="inner-list">
+              <li class="inner-list__item" (click)="copyToClipboard(data.tamojni)">
+                <i class="uil uil-copy blue"></i>
+                <a>{{'copy' | translate}}</a>
+              </li>
+              <li class="inner-list__item" *ngIf="data.products && data.products.length > 0">
+                <i class="uil uil-info-circle blue"></i>
+                <a>{{'orders.points' | translate}} ({{data.products.length}})</a>
+              </li>
+            </ul>
+          </div>
+        </li>
+        <li>
+          <p class="name">{{'orders.ship_date' | translate}}</p>
+          <div>
+            <p class="description">{{data.ship_date | date : "dd MMMM yyyy"}}</p>
+          </div>
+        </li>
+        <li>
+          <p class="name">{{'orders.num_contr' | translate}}</p>
+          <div>
+            <p class="description">{{data.num_contr}}</p>
+          </div>
+        </li>
+        <li>
+          <p class="name">{{'orders.num_contr_date' | translate}}</p>
+          <div>
+            <p class="description">{{data.num_contr_date | date : "dd MMMM yyyy"}}</p>
+          </div>
+        </li>
+        <li>
+          <p class="name">{{'orders.ord_num' | translate}}</p>
+          <div>
+            <p class="description">{{data.ord_num}}</p>
+          </div>
+        </li>
+        <li>
+          <p class="name">{{'orders.ord_date' | translate}}</p>
+          <div>
+            <p class="description">{{data.ord_date | date : "dd MMMM yyyy"}}</p>
+          </div>
+        </li>
+        <li>
+          <p class="name">{{'orders.transport_kind' | translate}}</p>
+          <div>
+            <p class="description" *ngFor="let tr of data.drivers">{{tr.transport}}</p>
+          </div>
+        </li>
+        <li>
+          <p class="name">{{'orders.transport_number' | translate}}</p>
+          <div>
+            <p class="description" *ngFor="let tr of data.drivers">{{tr.trl_num}}</p>
+          </div>
+        </li>
+        <li>
+          <p class="name">{{'orders.driver_info' | translate}}</p>
+          <div>
+            <p class="description" *ngFor="let tr of data.drivers">{{tr.fullname}}, {{tr.card_id}}
+            </p>
+          </div>
+        </li>
+        <li>
+          <p class="name">{{'orders.driver_contact' | translate}}</p>
+          <div>
+            <p class="description" *ngFor="let tr of data.drivers">{{tr.contacts}}</p>
+          </div>
+        </li>
+        <li>
+          <p class="name">{{'orders.bord_cross' | translate}}</p>
+          <div>
+            <p class="description">{{data.bord_cross}}</p>
+          </div>
+        </li>
+        <li>
+          <p class="name">{{'orders.sts_curr' | translate}}</p>
+          <div>
+            <p class="description">{{data.sts_curr ? data.sts_curr : ('not_choosen' | translate)}}
+            </p>
+          </div>
+        </li>
+        <li>
+          <p class="name">{{'orders.svx_d' | translate}}</p>
+          <div>
+            <p class="description">{{data.svx_d ? data.svx_d : ('not_choosen' | translate)}}</p>
+          </div>
+        </li>
+        <li>
+          <p class="name">{{'orders.unload_d' | translate}}</p>
+          <div>
+            <p class="description">{{data.unload_d ? data.unload_d : ('not_choosen' | translate)}}
+            </p>
+          </div>
+        </li>
+
+        <li>
+          <p class="name">{{'orders.simple_carr' | translate}}</p>
+          <div>
+            <p class="description">{{data.simple_carr ? (data.simple_carr | number) : 0}}
+              {{data.currency_6}} </p>
+          </div>
+        </li>
+        <li>
+          <p class="name">{{'orders.carr_rate' | translate}}</p>
+          <div>
+            <p class="description">{{data.carr_rate ? (data.carr_rate | number) : 0}}
+              {{data.currency_4}}</p>
+          </div>
+        </li>
+        <li>
+          <p class="name">{{'orders.tax' | translate}}</p>
+          <div>
+            <p class="description">{{data.tax ? (data.tax | number) : 0}} {{data.currency_6}}</p>
+          </div>
+        </li>
+        <li>
+          <p class="name">{{'orders.prepay' | translate}}</p>
+          <div>
+            <p class="description" *ngFor="let i of data.prepay">{{i.amount | number}}
+              {{data.currency_6}}</p>
+          </div>
+        </li>
+        <li>
+          <p class="name">{{'orders.dept' | translate }}</p>
+          <div>
+            <p class="description">{{data.dept ? (data.dept | number) : 0}} {{data.currency_6}}</p>
+          </div>
+        </li>
+        <li>
+          <p class="name">{{'orders.schet' | translate}}</p>
+          <div>
+            <p class="description">{{data.schet ? (data.schet | number) : 0}} {{data.currency_6}}
+            </p>
+          </div>
+        </li>
+      </ul>
+      <ul class="order-detail-list" *ngIf="type !== 'document'">
+        <li>
+          <p class="name">{{'documents.company_name' | translate}}</p>
+          <div>
+            <p class="description">{{data.title}}</p>
+          </div>
+        </li>
+        <li>
+          <p class="name">{{'documents.address' | translate}}</p>
+          <div>
+            <p class="description">{{data.address}}</p>
+          </div>
+        </li>
+        <li>
+          <p class="name">{{'orders.tovar' | translate}}</p>
+          <div>
+            <p class="description">{{data.info}}</p>
+          </div>
+        </li>
+        <li>
+          <p class="name">{{'documents.phone' | translate}}</p>
+          <div>
+            <p class="description">{{data.contact}}</p>
+          </div>
+        </li>
+        <li>
+          <p class="name">{{'documents.mail' | translate}}</p>
+          <div>
+            <p class="description">{{data.email_address}}</p>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="sweet_alert-content" [ngClass]="{'open': detailModal}" *ngIf="data">
+  <div class="sweet_alert-body" style="width: 100%;">
+    <h2 class="sweet_alert-title">{{ type == 'document' ? ('detail_order' | translate) :
+      ('documents.detail_company' | translate)}} {{data?.num}}</h2>
+    <button class="close-alert" type="button" (click)="closeAlert()">
+      <i class="uil uil-times"></i>
+    </button>
+    <div class="sweet_alert-inner full">
+      <div class="document-order-details__body">
+        <ul class="order-detail-list" *ngIf="type == 'document'">
+          <li>
+            <p class="name">{{'status' | translate}}</p>
+            <div>
+              <p class="description status">{{data.status}}</p>
+            </div>
+          </li>
+          <li>
+            <p class="name">{{'orders.order_num' | translate}}</p>
+            <div>
+              <p class="description">{{data.num}}</p>
+            </div>
+          </li>
+          <li>
+            <p class="name"></p>
+            <div>
+              <p class="description"></p>
+            </div>
+          </li>
+          <li>
+            <p class="name">{{'orders.route' | translate}}</p>
+            <div>
+              <p class="description">{{data.marwrut}}</p>
+            </div>
+          </li>
+          <li>
+            <p class="name">{{'orders.customer' | translate}}</p>
+            <div>
+              <p class="description">{{data.customer}}</p>
+            </div>
+          </li>
+          <li>
+            <p class="name">{{'orders.tovar' | translate}}</p>
+            <div>
+              <p class="description"> {{data.tovar}} </p>
+              <ul class="inner-list" *ngIf="data.products && data.products.length > 0">
+                <li class="inner-list__item">
+                  <i class="uil uil-info-circle blue"></i>
+                  <a>{{'orders.tovar' | translate}} ({{data.products.length}})</a>
+                </li>
+              </ul>
+            </div>
+          </li>
+          <li *ngIf="data.products && data.products.length > 0">
+            <p class="name">{{'orders.weight_volume' | translate}}</p>
+            <div>
+              <p class="description" *ngFor="let pr of data.products"> {{pr.volume}} м3 / {{pr.qty}}
+                {{pr.package}}</p>
+            </div>
+          </li>
+          <li>
+            <p class="name">{{'orders.tamojni' | translate}}</p>
+            <div>
+              <p class="description">{{data.tamojni}}</p>
+              <ul class="inner-list">
+                <li class="inner-list__item" (click)="copyToClipboard(data.tamojni)">
+                  <i class="uil uil-copy blue"></i>
+                  <a>{{'copy' | translate}}</a>
+                </li>
+                <li class="inner-list__item" *ngIf="data.products && data.products.length > 0">
+                  <i class="uil uil-info-circle blue"></i>
+                  <a>{{'orders.points' | translate}} ({{data.products.length}})</a>
+                </li>
+              </ul>
+            </div>
+          </li>
+          <li>
+            <p class="name">{{'orders.ship_date' | translate}}</p>
+            <div>
+              <p class="description">{{data.ship_date | date : "dd MMMM yyyy"}}</p>
+            </div>
+          </li>
+          <li>
+            <p class="name">{{'orders.num_contr' | translate}}</p>
+            <div>
+              <p class="description">{{data.num_contr}}</p>
+            </div>
+          </li>
+          <li>
+            <p class="name">{{'orders.num_contr_date' | translate}}</p>
+            <div>
+              <p class="description">{{data.num_contr_date | date : "dd MMMM yyyy"}}</p>
+            </div>
+          </li>
+          <li>
+            <p class="name">{{'orders.ord_num' | translate}}</p>
+            <div>
+              <p class="description">{{data.ord_num}}</p>
+            </div>
+          </li>
+          <li>
+            <p class="name">{{'orders.ord_date' | translate}}</p>
+            <div>
+              <p class="description">{{data.ord_date | date : "dd MMMM yyyy"}}</p>
+            </div>
+          </li>
+          <li>
+            <p class="name">{{'orders.transport_kind' | translate}}</p>
+            <div>
+              <p class="description" *ngFor="let tr of data.drivers">{{tr.transport}}</p>
+            </div>
+          </li>
+          <li>
+            <p class="name">{{'orders.transport_number' | translate}}</p>
+            <div>
+              <p class="description" *ngFor="let tr of data.drivers">{{tr.trl_num}}</p>
+            </div>
+          </li>
+          <li>
+            <p class="name">{{'orders.driver_info' | translate}}</p>
+            <div>
+              <p class="description" *ngFor="let tr of data.drivers">{{tr.fullname}}, {{tr.card_id}}
+              </p>
+            </div>
+          </li>
+          <li>
+            <p class="name">{{'orders.driver_contact' | translate}}</p>
+            <div>
+              <p class="description" *ngFor="let tr of data.drivers">{{tr.contacts}}</p>
+            </div>
+          </li>
+          <li>
+            <p class="name">{{'orders.bord_cross' | translate}}</p>
+            <div>
+              <p class="description">{{data.bord_cross}}</p>
+            </div>
+          </li>
+          <li>
+            <p class="name">{{'orders.sts_curr' | translate}}</p>
+            <div>
+              <p class="description">{{data.sts_curr ? data.sts_curr : ('not_choosen' | translate)}}
+              </p>
+            </div>
+          </li>
+          <li>
+            <p class="name">{{'orders.svx_d' | translate}}</p>
+            <div>
+              <p class="description">{{data.svx_d ? data.svx_d : ('not_choosen' | translate)}}</p>
+            </div>
+          </li>
+          <li>
+            <p class="name">{{'orders.unload_d' | translate}}</p>
+            <div>
+              <p class="description">{{data.unload_d ? data.unload_d : ('not_choosen' | translate)}}
+              </p>
+            </div>
+          </li>
+
+          <li>
+            <p class="name">{{'orders.simple_carr' | translate}}</p>
+            <div>
+              <p class="description">{{data.simple_carr ? (data.simple_carr | number) : 0}}
+                {{data.currency_6}} </p>
+            </div>
+          </li>
+          <li>
+            <p class="name">{{'orders.carr_rate' | translate}}</p>
+            <div>
+              <p class="description">{{data.carr_rate ? (data.carr_rate | number) : 0}}
+                {{data.currency_4}}</p>
+            </div>
+          </li>
+          <li>
+            <p class="name">{{'orders.tax' | translate}}</p>
+            <div>
+              <p class="description">{{data.tax ? (data.tax | number) : 0}} {{data.currency_6}}</p>
+            </div>
+          </li>
+          <li>
+            <p class="name">{{'orders.prepay' | translate}}</p>
+            <div>
+              <p class="description" *ngFor="let i of data.prepay">{{i.amount | number}}
+                {{data.currency_6}}</p>
+            </div>
+          </li>
+          <li>
+            <p class="name">{{'orders.dept' | translate }}</p>
+            <div>
+              <p class="description">{{data.dept ? (data.dept | number) : 0}} {{data.currency_6}}</p>
+            </div>
+          </li>
+          <li>
+            <p class="name">{{'orders.schet' | translate}}</p>
+            <div>
+              <p class="description">{{data.schet ? (data.schet | number) : 0}} {{data.currency_6}}
+              </p>
+            </div>
+          </li>
+        </ul>
+        <ul class="order-detail-list" *ngIf="type !== 'document'">
+          <li>
+            <p class="name">{{'documents.company_name' | translate}}</p>
+            <div>
+              <p class="description">{{data.title}}</p>
+            </div>
+          </li>
+          <li>
+            <p class="name">{{'documents.address' | translate}}</p>
+            <div>
+              <p class="description">{{data.address}}</p>
+            </div>
+          </li>
+          <li>
+            <p class="name">{{'orders.tovar' | translate}}</p>
+            <div>
+              <p class="description">{{data.info}}</p>
+            </div>
+          </li>
+          <li>
+            <p class="name">{{'documents.phone' | translate}}</p>
+            <div>
+              <p class="description">{{data.contact}}</p>
+            </div>
+          </li>
+          <li>
+            <p class="name">{{'documents.mail' | translate}}</p>
+            <div>
+              <p class="description">{{data.email_address}}</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="fullscreen-modal" *ngIf="isFullScreen">
+  <button class="close-btn" (click)="closeFullScreen()">&times;</button>
+
+  <ngx-doc-viewer
+    *ngIf="selectedFile && selectedFile.section !== 'customer' && selectedFile.mime_type != 'image' && selectedFile.mime_type != 'jpg' && selectedFile.mime_type != 'png' && selectedFile.mime_type != 'pdf'"
+    [url]="siteUrl + '/uploads/documents/' + selectedFile.type + '/' + selectedFile.filename" viewer="google"
+    style="width:100%;height:100vh;"></ngx-doc-viewer>
+  <ngx-doc-viewer *ngIf="(selectedFile && selectedFile.section !== 'customer') && selectedFile.mime_type == 'pdf'"
+    [url]="siteUrl + '/uploads/documents/' + 'docs' + '/' + selectedFile.filename" viewer="pdf"
+    style="width:100%;height:100vh;"></ngx-doc-viewer>
+
+  <ngx-doc-viewer
+    *ngIf="selectedFile && selectedFile.section == 'customer' && selectedFile.mime_type != 'image' && selectedFile.mime_type != 'jpg' && selectedFile.mime_type != 'png' && selectedFile.mime_type != 'pdf'"
+    [url]="siteUrl + selectedFile.container + selectedFile.filename" viewer="google"
+    style="width:100%;height:100vh;"></ngx-doc-viewer>
+  <ngx-doc-viewer *ngIf="selectedFile && selectedFile.section == 'customer' && selectedFile.mime_type == 'pdf'"
+    [url]="siteUrl + selectedFile.container + selectedFile.filename" viewer="pdf"
+    style="width:100%;height:100vh;"></ngx-doc-viewer>
+
+
+  <img *ngIf="selectedFile.mime_type == 'jpg' || selectedFile.mime_type == 'png'"
+    [src]="siteUrl + '/uploads/documents/' + selectedFile.type + '/' + selectedFile.filename" alt="Full screen document"
+    style="width:100vw; height:100vh; object-fit: contain;">
+</div>
+
+<div class="loading-page" *ngIf="loadingPage">
+  <img src="/assets/images/spinner.svg" class="spinner-load">
+</div>
+<div class="loading-page" *ngIf="uploading">
+  <div>
+    <img src="/assets/images/spinner.svg"> <br> {{uploadingText}}
+  </div>
+</div>

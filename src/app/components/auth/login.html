@@ -1,0 +1,63 @@
+<div class="login-logo"><img src="/assets/images/logo.svg" alt="Litez"></div>
+<div class="login-content">
+  <h3 *ngIf="content == 'auth'">{{'auth.auth' | translate}}</h3>
+  <h3 *ngIf="content == 'forgot'">{{'auth.restore_pass' | translate}}</h3>
+  <h3 *ngIf="content == 'restore'">{{'auth.restore_pass' | translate}}</h3>
+  
+  <form (ngSubmit)="login()" *ngIf="loginData && content == 'auth'" #loginForm="ngForm" novalidate="novalidate">
+    <div class="form-group mb-3">
+      <label>{{'auth.login' | translate}}</label>
+      <div class="input_icons">
+        <i class="uil uil-user-square"></i>
+        <input type="email" placeholder="{{'auth.enter_login' | translate}}" class="form-control" name="email" [(ngModel)]="loginData.email" required>
+      </div>
+    </div>
+    <div class="form-group mb-3">
+      <label>{{'auth.password' | translate}}</label>
+      <div class="input_icons">
+        <i class="uil uil-lock-alt"></i>
+        <input  [type]=" show ? 'text' : 'password'" class="form-control" name="password" placeholder="*********" [(ngModel)]="loginData.password" required>
+        <i (click)="showPassword()" [ngClass]="show ? 'uil-eye-slash' : 'uil-eye'" class="uil suffix-eye-password"></i>
+
+      </div>
+    </div>
+    <div class="form-group mb-2">
+      <a class="text-muted" role="button" (click)="contentAuth('forgot')">{{'auth.forgot_password' | translate}}</a>
+    </div>
+    <div class="form-group">
+      <button type="submit" class="btn btn-warning w-100" [disabled]="!loginForm.form.valid || loading">{{'auth.sign_in' | translate}} <img *ngIf="loading" src="/assets/images/spinner.svg" class="spinner-load"></button>
+    </div>
+  </form>
+
+  <form (ngSubmit)="forgotPassword()" *ngIf="forgotData && content == 'forgot'" #loginForm="ngForm" novalidate="novalidate">
+    <div class="form-group mb-3">
+      <label>Email</label>
+      <div class="input_icons">
+        <i class="uil uil-envelope-alt"></i>
+        <input type="email" placeholder="{{'auth.enter_login' | translate}}" class="form-control" name="email" [(ngModel)]="forgotData.email" required>
+      </div>
+    </div>
+    <div class="form-group mb-2">
+      <a class="text-muted" role="button" (click)="contentAuth('auth')">{{'auth.sign_in' | translate}}</a>
+    </div>
+    <div class="form-group">
+      <button type="submit" class="btn btn-warning w-100" [disabled]="!loginForm.form.valid || loading">{{'auth.reset_pass' | translate}} <img *ngIf="loading" src="/assets/images/spinner.svg" class="spinner-load"></button>
+    </div>
+  </form>
+
+  <form (ngSubmit)="restorePassword()" *ngIf="restoreData && content == 'restore'" #dataForm="ngForm" class="form-horizontal auth-form" novalidate="novalidate">
+    <div class="alert alert-success">{{ 'auth.register_success' | translate: { email: forgotData.email } }}</div>
+    <div class="form-group mb-2">
+      <label class="form-label" for="verification_code">{{'auth.verification_code' | translate}}</label>
+      <div class="input-group">                          
+        <input type="text" class="form-control" name="verification_code" id="verification_code" placeholder="{{'auth.enter_code' | translate}}" [(ngModel)]="restoreData.verification_code" required>
+      </div>                                    
+    </div>
+    <div class="form-group mb-0">
+      <button type="submit" class="btn btn-warning w-100" [disabled]="!dataForm.form.valid || loading">{{'confirm' | translate}} <img *ngIf="loading" src="/assets/images/spinner.svg" class="spinner-load"></button>
+    </div>
+  </form> 
+
+</div>
+
+<div class="login-bg"></div>

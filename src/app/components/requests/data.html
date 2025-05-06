@@ -1,0 +1,200 @@
+<div class="content-header">
+    <h2 class="page-title">{{'requests.my_requests' | translate}}</h2>
+    <button class="btn btn-primary" (click)="requestModal = true">
+        <i class="uil uil-plus"></i>
+        <span class="d-web">{{'requests.new_request' | translate}}</span>
+    </button>
+</div>
+
+<div class="content-filter justify-between">
+    <div class="filter">
+        <ul class="filters">
+            <li>
+                <button type="button" class="btn" [ngClass]="{'btn-outline': !anyChecked()}"
+                    (click)="selectedStatus({ title: 'Недавние запросы', val: 'new', checked: true })">
+                    {{ 'Недавние запросы' | translate }}
+                </button>
+            </li>
+            <span class="seperator-border"></span>
+            <li *ngFor="let item of statuses">
+                <button class="btn btn-light" [ngClass]="{'selected': item.checked}" (click)="selectedStatus(item)">
+                    {{ item.title | translate }}
+                </button>
+            </li>
+        </ul>
+    </div>
+    <div class="d-web">
+        <div class="pagination">
+            <p class="pagination__count-text d-web">
+                {{ pageParams.from }}-{{ pageParams.to }} из {{ pageParams.total }}
+            </p>
+
+            <ng-select [clearable]="false" [(ngModel)]="filter.per_page" (change)="updatePageSize($event)">
+                <ng-option [value]="30">По 30 строк</ng-option>
+                <ng-option [value]="50">По 50 строк</ng-option>
+                <ng-option [value]="100">По 100 строк</ng-option>
+            </ng-select>
+
+            <div class="pagination__buttons">
+                <button [disabled]="pageParams.current_page <= 1" (click)="changePage(pageParams.current_page - 1)">
+                    <i class="uil uil-angle-left"></i>
+                </button>
+                <button [disabled]="pageParams.current_page >= pageParams.last_page"
+                    (click)="changePage(pageParams.current_page + 1)">
+                    <i class="uil uil-angle-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="table-container">
+    <div class="table-wrapper">
+        <table>
+            <thead class="thead-sticky">
+                <tr>
+                    <th>{{'orders.route' | translate}}</th>
+                    <th>{{'orders.tovar' | translate}}</th>
+                    <th>{{'status' | translate}}</th>
+                    <th>{{'created_at' | translate}}</th>
+                    <th>{{'requests.request_num' | translate}}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let item of dataItems" (click)="showUpdateModal(item)">
+                    <td>
+                        <div class="td-data">
+                            <p class="text bold">{{item.title}}</p>
+                            <div class="operation-buttons m-0">
+                                <a class="td-data__link" role="button" routerLink="{{item.id}}">
+                                    <button class="open">{{'open' | translate}}</button>
+                                </a>
+                                <a class="td-data__link" role="button" (click)="showDeleteConfirm(item)">
+                                    <button class="delete">{{'delete' | translate}}</button>
+                                </a>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="td-data">
+                            <p class="text"> {{item.product}} </p>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="td-data">
+                            <span class="status task-completed" *ngIf="item.status == 'new'">{{item.status |
+                                translate}}</span>
+                            <span class="status planned" *ngIf="item.status == 'old'">{{item.status | translate}}</span>
+                            <span class="status canceled" *ngIf="item.status == 'archive'">{{item.status |
+                                translate}}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="td-data">{{item.created_at | date : "dd.MM.YYYY"}}</div>
+                    </td>
+                    <td>
+                        <div class="td-data account">{{item.num}}</div>
+                    </td>
+                </tr>
+                <tr *ngIf="dataItems && dataItems.length === 0">
+                    <td colspan="5" class="text-center">
+                        <div class="d-flex flex-column align-center mt-3 mb-3">
+                            <img src="./assets/images/no_data.png" alt="" width="64" height="64">
+                            <span class="mt-2">{{ 'no_data' | translate }}</span>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="pagination">
+    <p class="pagination__count-text d-web">
+        {{ pageParams.from }}-{{ pageParams.to }} из {{ pageParams.total }}
+    </p>
+
+    <ng-select [clearable]="false" [(ngModel)]="filter.per_page" (change)="updatePageSize($event)">
+        <ng-option [value]="30">По 30 строк</ng-option>
+        <ng-option [value]="50">По 50 строк</ng-option>
+        <ng-option [value]="100">По 100 строк</ng-option>
+    </ng-select>
+
+    <div class="pagination__buttons">
+        <button [disabled]="pageParams.current_page <= 1" (click)="changePage(pageParams.current_page - 1)">
+            <i class="uil uil-angle-left"></i>
+        </button>
+        <button [disabled]="pageParams.current_page >= pageParams.last_page"
+            (click)="changePage(pageParams.current_page + 1)">
+            <i class="uil uil-angle-right"></i>
+        </button>
+    </div>
+</div>
+
+<div class="sweet_alert-content" [ngClass]="{'open': requestModal}">
+    <div class="sweet_alert-body" style="width: 600px;">
+        <h2 class="sweet_alert-title"> {{ data.id ? ('requests.edit_request' | translate) : ('requests.new_request' |
+            translate) }}</h2>
+        <button class="close-alert" type="button" (click)="closeAlert()">
+            <i class="uil uil-times"></i>
+        </button>
+        <div class="sweet_alert-inner full">
+            <div class="row mb-3 mb-2">
+                <div class="col-sm-12 mb-3" *ngIf="data.id">
+                    <div class="form-group">
+                        <label class="form-label">{{'status' | translate}}:</label>
+                        <ng-select [clearable]="false" [searchable]="false" [(ngModel)]="data.status" appendTo="body">
+                            <ng-option value="new">{{'new' | translate}}</ng-option>
+                            <ng-option value="old">{{'old' | translate}}</ng-option>
+                            <ng-option value="archive">{{'archive' | translate}}</ng-option>
+                        </ng-select>
+                    </div>
+                </div>
+                <div class="col-sm-12 mb-3">
+                    <div class="form-group">
+                        <label class="form-label">{{'orders.route' | translate}}:</label>
+                        <input type="text" class="form-control" [(ngModel)]="data.title">
+                    </div>
+                </div>
+                <div class="col-sm-12">
+                    <div class="form-group">
+                        <label class="form-label">{{'orders.tovar' | translate}}:</label>
+                        <input type="text" class="form-control" [(ngModel)]="data.product">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sweet_alert-buttons">
+            <button (click)="closeAlert()" type="button" class="btn btn-danger ml-3" [disabled]="loading">{{'cancel' |
+                translate}} <img *ngIf="loading" src="/assets/images/spinner.svg" class="spinner-load"></button>
+            <button (click)="postRequest()" type="button" class="btn btn-primary ml-3" [disabled]="loading">{{'save' |
+                translate}} <img *ngIf="loading" src="/assets/images/spinner.svg" class="spinner-load"></button>
+        </div>
+    </div>
+</div>
+
+<div class="sweet_alert-content" [ngClass]="{'open': deleteConfirmModal}">
+    <div class="sweet_alert-body" style="width: 400px;">
+        <h2 class="sweet_alert-title">{{ 'delete' | translate }}</h2>
+        <div class="sweet_alert-text text-center mt-3">{{ 'delete_sure' | translate }} </div>
+        <div class="text-center mt-1 mb-3"><b>{{data?.title}}</b></div>
+
+        <button class="close-alert" type="button" (click)="closeAlert()">
+            <i class="uil uil-times"></i>
+        </button>
+
+        <div class="sweet_alert-buttons">
+            <button (click)="closeAlert()" type="button" class="btn btn-secondary ml-3">
+                {{ 'cancel' | translate }}
+            </button>
+            <button (click)="deleteRequest()" type="button" class="btn btn-danger ml-3" [disabled]="loading">
+                {{ 'delete' | translate }}
+                <img *ngIf="loading" src="/assets/images/spinner.svg" class="spinner-load">
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="loading-page" *ngIf="loadingPage">
+    <img src="/assets/images/spinner.svg" class="spinner-load">
+</div>

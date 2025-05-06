@@ -1,0 +1,54 @@
+<div class="header" *ngIf="isAuthenticated">
+
+  <div class="header__logo-wrapper d-web">
+    <img src="/assets/images/logo.svg" class="header__logo" alt="Litez Management">
+  </div>
+  <div class="header__logo-wrapper d-mob" (click)="toggleSidebar.emit()">
+    <i class="uil uil-bars header__toggle-button"></i>
+  </div>
+
+  <div class="header__search-wrapper">
+  </div>
+
+  <div class="header__info-wrapper d-web">
+    <!-- <ul class="info-list">
+
+      <li class="info-list__item">
+        <button class="info-list__item-button" routerLink="/notifications">
+          <i class="uil uil-bell"></i>
+          <span class="info-list__item-badge badge badge-blue">1</span>
+        </button>
+      </li>
+      <li class="info-list__item">
+        <button class="info-list__item-button" routerLink="/chat">
+          <i class="uil uil-comment-alt"></i>
+          <span class="info-list__item-badge badge badge-danger">1</span>
+        </button>
+      </li>
+      <li class="info-list__item">
+        <button class="info-list__item-button" routerLink="/tasks">
+          <i class="uil uil-check-circle"></i>
+          <span class="info-list__item-badge badge badge-success">1</span>
+        </button>
+      </li>
+    </ul> -->
+  </div>
+
+
+  <div class="header__account-wrapper" *ngIf="currentUser" ngbDropdown>
+    <p class="account-name d-web">{{currentUser.name}}</p>
+    <button ngbDropdownToggle>
+      <img class="account-logo" *ngIf="currentUser.photo" src="{{siteUrl}}/uploads/clients/{{currentUser.photo}}"
+        alt="{{currentUser.name}}">
+      <img class="account-logo" *ngIf="!currentUser.photo" src="/assets/images/default_avatar.svg"
+        alt="{{currentUser.name}}">
+      <i class="uil uil-angle-down d-web"></i>
+    </button>
+    <ul class="mini" ngbDropdownMenu>
+      <li class="nav-item"><a class="nav-link" routerLink="/profile">{{'header.profile' | translate}}</a></li>
+      <li class="divider"></li>
+      <li class="nav-item"><a class="nav-link" role="button" (click)="onLogout()">{{'header.logout' | translate}}</a>
+      </li>
+    </ul>
+  </div>
+</div>

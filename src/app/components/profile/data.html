@@ -1,0 +1,94 @@
+<div class="profile-photo">
+  <div class="btn btn-default btn-upload">
+    <input type="file" id="uploadPhoto" accept="image/*" name="photo" (change)="uploadPhoto($event)">
+    <img *ngIf="currentUser.photo" src="{{siteUrl}}/uploads/clients/{{currentUser.photo}}">
+    <img *ngIf="!currentUser.photo" src="/assets/images/default_avatar.svg">
+    <i class="uil uil-camera"></i>
+  </div>
+  <div>
+    <h3 class="page-title">{{currentUser.name}}</h3>
+    <p>{{currentUser.email}}</p>
+  </div>
+</div>
+<form (ngSubmit)="patchData()" *ngIf="currentUser" #dataForm="ngForm" novalidate="novalidate" class="row">
+  <div class="col-sm-3">
+    <div class="card h-full">
+      <h4>{{'profile.title_1' | translate}}</h4>
+      <div class="form-group mb-3">
+        <label>{{'profile.name' | translate}}</label>
+        <input type="text" class="form-control" name="name" [(ngModel)]="currentUser.name" required>
+      </div>
+      <div class="form-group mb-3">
+        <label>{{'profile.dob' | translate}}</label>
+        <input type="date" class="form-control" name="dob" [(ngModel)]="currentUser.dob">
+      </div>
+      <div class="form-group">
+        <label>{{'profile.info' | translate}}</label>
+        <textarea rows="3" class="form-control" name="info" [(ngModel)]="currentUser.info"></textarea>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-3">
+    <div class="card h-full">
+      <h4>{{'profile.title_2' | translate}}</h4>
+      <div class="form-group mb-3">
+        <label>{{'profile.email' | translate}}</label>
+        <input type="email" class="form-control" name="email" [(ngModel)]="currentUser.email" required>
+      </div>
+      <div class="form-group mb-3">
+        <label>{{'profile.phone' | translate}}</label>
+        <input type="tel" class="form-control" name="phone" [(ngModel)]="currentUser.phone" placeholder="+998 XX.....">
+      </div>
+      <div class="form-group mb-3">
+        <label>Telegram</label>
+        <input type="text" class="form-control" name="telegram" [(ngModel)]="currentUser.telegram">
+      </div>
+      <div class="form-group">
+        <label>Whatsapp</label>
+        <input type="text" class="form-control" name="whatsapp" [(ngModel)]="currentUser.whatsapp">
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-3">
+    <div class="card h-full">
+      <h4>{{'profile.title_3' | translate}}</h4>
+      <div class="form-group mb-3">
+        <label>{{'profile.job' | translate}}</label>
+        <input type="text" class="form-control" name="job" [(ngModel)]="currentUser.job">
+      </div>
+      <div class="form-group mb-3">
+        <label>{{'profile.department' | translate}}</label>
+        <input type="text" class="form-control" name="department" [(ngModel)]="currentUser.department">
+      </div>
+      <div class="form-group mb-3">
+        <label>{{'profile.company' | translate}}</label>
+        <input type="text" class="form-control" name="company" [(ngModel)]="currentUser.company">
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-3">
+    <div class="card h-full">
+      <h4>{{'profile.title_4' | translate}}</h4>
+      <div class="form-group mb-3">
+        <label>{{'profile.new_password' | translate}}</label>
+        <input type="text" class="form-control" name="password" [(ngModel)]="currentUser.password"
+          placeholder="{{'profile.enter_new_password' | translate}}">
+      </div>
+      <div class="form-group mb-3">
+        <label>{{'profile.confirm_password' | translate}}</label>
+        <input type="text" class="form-control" name="confirm_password" [(ngModel)]="currentUser.confirm_password"
+          placeholder="{{'profile.enter_confirm_password' | translate}}">
+      </div>
+      <div class="form-group">
+        <button type="submit" class="btn btn-primary" [disabled]="!dataForm.form.valid || loading">{{'save' |
+          translate}} <img *ngIf="loading" src="/assets/images/spinner.svg" class="spinner-load"></button>
+      </div>
+    </div>
+  </div>
+</form>
+
+<div class="loading-page" *ngIf="uploading">
+  <div>
+    <img src="/assets/images/spinner.svg"> <br> {{uploadingText}}
+  </div>
+</div>

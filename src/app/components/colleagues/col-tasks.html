@@ -1,0 +1,90 @@
+<div class="table-container">
+    <div class="table-wrapper">
+        <table>
+            <thead class="thead-sticky">
+                <tr>
+                    <th>{{'task.task' | translate}}</th>
+                    <th>{{'task.priority' | translate}}</th>
+                    <th>{{'status' | translate}}</th>
+                    <th>{{'created_at' | translate}}</th>
+                    <th>{{'task.executor' | translate}}</th>
+                    <th>{{'task.viewer' | translate}}</th>
+                    <th>{{'task.last_change' | translate}}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let item of data" routerLink="/tasks/{{item.id}}/view">
+                    <td>
+                        <div class="td-data">
+                            <a class="td-data__link">
+                                <p class="text bold">{{item.title}}</p>
+                            </a>
+                            <span class="sub-text">{{item.invoice.num}} · {{item.invoice.marwrut}}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="td-data">
+                            <button *ngIf="item.priority === 'high'" class="priority-button red">
+                                <i class="uil uil-angle-double-up"></i>
+                            </button>
+                            <button *ngIf="item.priority === 'low'" class="priority-button blue">
+                                <i class="uil uil-angle-double-down"></i>
+                            </button>
+                            <button *ngIf="item.priority === 'middle'" class="priority-button ">
+                                <i class="uil uil-grip-horizontal-line gray"></i>
+                            </button>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="td-data">
+                            <span class="status"
+                                [ngClass]="getStatusColor(item.status)">{{getStatusTitle(item.status)}}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="td-data">{{item.created_at | date : "dd MMMM YYYY HH:mm"}}</div>
+                    </td>
+                    <td>
+                        <div class="td-data account">
+                            <img *ngIf="item.executor && item.executor.photo" class="account-logo"
+                                src="{{siteUrl}}/uploads/clients/{{item.executor.photo}}" alt=""
+                                style="width: 30px; height: 30px" />
+                            <img *ngIf="item.executor && !item.executor.photo" class="account-logo"
+                                src="/assets/images/default_avatar.svg" alt="" style="width: 30px; height: 30px" />
+                            <p class="text">{{item.executor?.name}}</p>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="td-data accounts">
+                            <img *ngFor="let viewer of item.viewers" class="account-logo pointer"
+                                (click)="showTooltip($event, item.viewers)"
+                                src="{{siteUrl}}/uploads/clients/{{viewer.photo}}" alt="" />
+                        </div>
+                    </td>
+
+                    <td>
+                        <div class="td-data account">
+                            <img *ngIf="item.lastupd && item.lastupd.photo" class="account-logo"
+                                src="{{siteUrl}}/uploads/clients/{{item.lastupd.photo}}" alt=""
+                                style="width: 30px; height: 30px" />
+                            <img *ngIf="item.lastupd && !item.lastupd.photo" class="account-logo"
+                                src="/assets/images/default_avatar.svg" alt="" style="width: 30px; height: 30px" />
+                            <div>
+                                <p class="text" *ngIf="item.lastupd">{{item.lastupd.name}}</p>
+                                <div class="sub-text">{{item.updated_at | date : "dd MMMM YYYY HH:mm"}}</div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr *ngIf="data && data.length === 0">
+                    <td colspan="7" class="text-center">
+                        <div class="d-flex flex-column align-center mt-3 mb-3">
+                            <img src="./assets/images/no_data.png" alt="" width="64" height="64">
+                            <span class="mt-2">{{ 'no_data' | translate }}</span>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

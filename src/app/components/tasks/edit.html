@@ -1,0 +1,192 @@
+<div class="content" style="background-color: #FFF;">
+    <div class="task-wrapper">
+        <div class="w-100 mr-3">
+
+            <div class="breadcrumb">
+                <span class="breadcrumb-item active" routerLink="/tasks">{{'task.title' | translate}}</span>
+                <i class="uil uil-angle-right active"></i>
+                <span class="breadcrumb-item">{{'task.create' | translate}}</span>
+            </div>
+            <input type="text" [(ngModel)]="data.title" class="append-to-order__title-input mt-4"
+                placeholder="{{'task.heading' | translate}}">
+            <div class="order-choise">
+                <h3 class="order-choise__title">{{ 'task.assign_order' | translate }}</h3>
+                <ng-select class="w-100" [items]="invoices" [clearable]="false"
+                    placeholder="{{ 'task.search_order' | translate }}" [(ngModel)]="data.invoice_id"
+                    (search)="onSearch($event)" [searchable]="true" [loading]="loading" bindLabel="num" bindValue="id"
+                    [virtualScroll]="true">
+                </ng-select>
+            </div>
+    
+            <angular-editor name="text" [(ngModel)]="data.message" [config]="editorConfig"></angular-editor>
+    
+            <div class="file-upload-container mt-2 mb-3">
+                <button class="btn btn-white" (click)="fileInput.click()">
+                    <i class="uil uil-paperclip"></i> {{ 'ticket.attach' | translate }}
+                </button>
+                <input type="file" #fileInput multiple (change)="uploadPhoto($event)" style="display: none;" />
+                <div class="file-preview">
+                    <div *ngFor="let file of data.files; let i = index" class="file-item">
+                        <div class="file-icon">
+                            <img [src]="getFileIcon(file.filename)" alt="file icon" />
+                        </div>
+                        <span class="file-name">{{ file.original_name }}</span>
+                        <button class="delete-btn" (click)="removeFile(file, i)">
+                            <i class="uil uil-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+    
+    
+        </div>
+    
+        <div class="detail">
+            <div class="d-flex gap-1 mb-3 d-web">
+                <button class="btn btn-white w-100" routerLink="/tasks">{{'cancel' | translate}}</button>
+                <button class="btn btn-primary w-100" (click)="saveTask()" [disabled]="loading">
+                    <img src="/assets/images/spinner.svg" alt="" class="spinner-load" *ngIf="loading">
+                    {{'save' | translate}}</button>
+            </div>
+            <hr>
+            <div class="d-flex align-center justify-between mb-3">
+                <span class="key">{{'status' | translate}}</span>
+                <span class="value">
+                    <ng-select class="w-100" [clearable]="false" [placeholder]="'choose' | translate"
+                        [(ngModel)]="data.status">
+                        <ng-option *ngFor="let status of statuses" [value]="status.val">{{status.title}}</ng-option>
+                    </ng-select>
+                </span>
+            </div>
+            <div class="d-flex align-center justify-between mb-3">
+                <span class="key">{{'task.priority' | translate}}</span>
+                <span class="value">
+                    <ng-select class="w-100" [clearable]="false" [placeholder]="'choose' | translate"
+                        [(ngModel)]="data.priority">
+                        <ng-option value="high">
+                            <span class="priority-button red">
+                                <i class="uil uil-angle-double-up" style="font-size: 20px;"></i>
+                            </span>
+                            Высокий
+                        </ng-option>
+                        <ng-option value="middle">
+                            <span class="priority-button red">
+                                <i class="uil uil-grip-horizontal-line gray"></i>
+                            </span>
+                            Средний
+                        </ng-option>
+    
+                        <ng-option value="low">
+                            <span class="priority-button red">
+                                <i class="uil uil-angle-double-down" style="font-size: 20px;"></i>
+                            </span>
+                            Низкий
+                        </ng-option>
+                    </ng-select>
+                </span>
+            </div>
+            <div class="d-flex align-center justify-between mb-3">
+                <span class="key">{{'task.deadine' | translate}}</span>
+                <span class="value">
+                    <input class="form-control w-100" type="datetime-local" [(ngModel)]="data.deadline">
+                </span>
+            </div>
+            <hr>
+            <div class="d-flex align-center justify-between mb-3">
+                <span class="key">{{'ticket.author' | translate}}</span>
+                <span class="value ml-3">
+                    <img *ngIf="currentUser && currentUser.photo" src="{{siteUrl}}/uploads/clients/{{currentUser.photo}}"
+                        alt="Client Photo" width="30px" height="30px">
+                    <img *ngIf="currentUser && !currentUser.photo" src="/assets/images/default_avatar.svg"
+                        alt="Client Photo" width="30px" height="30px">
+                    {{currentUser.name}}
+                </span>
+            </div>
+            <div class="d-flex align-center justify-between mb-3">
+                <span class="key">{{'task.executor' | translate}}</span>
+                <span class="value">
+                    <ng-select [searchable]="false" class="ng-select-table w-100" [clearable]="false"
+                        [placeholder]="'choose' | translate" [(ngModel)]="data.execute_id">
+                        <ng-option *ngFor="let item of collegues" [value]="item.id">
+                            <img *ngIf="item.photo" src="{{siteUrl}}/uploads/clients/{{item.photo}}" alt="">
+                            <img *ngIf="!item.photo" src="/assets/images/default_avatar.svg" alt="">
+                            {{item.name}}
+                        </ng-option>
+                    </ng-select>
+                </span>
+            </div>
+            <div class="d-flex justify-between mb-3">
+                <span class="key">{{'task.viewer' | translate}}</span>
+                <span class="value d-flex flex-column">
+                    <span class="viewer-item d-flex align-center mb-2 ml-2" *ngFor="let viewer of getSelectedViewers()">
+                        <img *ngIf="viewer.photo" [src]="siteUrl + '/uploads/clients/' + viewer.photo" alt="Viewer Photo"
+                            width="30px" height="30px">
+                        <img *ngIf="!viewer.photo" src="/assets/images/default_avatar.svg" alt="Default Avatar" width="30px"
+                            height="30px">
+                        {{ viewer.name }}
+                    </span>
+                    <button class="btn blue mt-1 p-0 d-block" style="text-align: left !important;" (click)="openAlert()">
+                        {{ 'task.change_viewer' | translate }}
+                    </button>
+                </span>
+    
+            </div>
+             
+            <hr *ngIf="data.id">
+            <div class="d-flex align-center justify-between mb-3" *ngIf="data.id">
+                <span class="key">{{'task.id' | translate}}</span>
+                <span class="value">{{data.id}}</span>
+            </div>
+            <div class="d-flex align-center justify-between mb-3" *ngIf="data.id">
+                <span class="key">{{'created_at' | translate}}</span>
+                <span class="value">{{data.created_at | date : 'dd MMMM, HH:mm'}}</span>
+            </div>
+
+            <div class="d-mob">
+                <div class="d-flex gap-1 mb-3">
+                    <button class="btn btn-white w-100" routerLink="/tasks">{{'cancel' | translate}}</button>
+                    <button class="btn btn-primary w-100" (click)="saveTask()" [disabled]="loading">
+                        <img src="/assets/images/spinner.svg" alt="" class="spinner-load" *ngIf="loading">
+                        {{'save' | translate}}</button>
+                </div>
+            </div>
+           
+
+        </div>
+       
+    </div>
+   
+
+</div>
+
+
+<div class="loading-page" *ngIf="uploading">
+    <div>
+        <img src="/assets/images/spinner.svg"> <br> {{uploadingText}}
+    </div>
+</div>
+
+<div class="sweet_alert-content" [ngClass]="{'open':alertShow}">
+    <div class="sweet_alert-body">
+        <h2 class="sweet_alert-title">{{'task.change_viewer' | translate}}</h2>
+        <button class="close-alert" type="button" (click)="closeAlert()"><i class="uil uil-times"></i></button>
+        <div class="sweet_alert-inner full">
+            <ng-select [multiple]="true" [searchable]="false" class="ng-select-table w-100" [clearable]="false"
+                [placeholder]="'choose' | translate" [(ngModel)]="data.viewers">
+                <ng-option *ngFor="let item of collegues" [value]="item.id">
+                    <img *ngIf="item.photo" src="{{siteUrl}}/uploads/clients/{{item.photo}}" alt="" width="30px"
+                        height="30px" />
+                    <img *ngIf="!item.photo" src="/assets/images/default_avatar.svg" alt="" width="30px"
+                        height="30px" />
+                    {{ item.name }}
+                </ng-option>
+            </ng-select>
+        </div>
+        <div class="sweet_alert-buttons">
+            <button type="button" class="btn btn-danger ml-3" [disabled]="loading" (click)="closeAlert()">{{'cancel' |
+                translate}} <img *ngIf="loading" src="/assets/images/spinner.svg" class="spinner-load"></button>
+            <button type="button" class="btn btn-primary ml-3" [disabled]="loading" (click)="saveViewers()">{{'save' |
+                translate}} <img *ngIf="loading" src="/assets/images/spinner.svg" class="spinner-load"></button>
+        </div>
+    </div>
+</div>

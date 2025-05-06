@@ -1,0 +1,137 @@
+<div class="menu" [ngClass]="{'close': collapseMenu}" [class.open]="isOpen">
+  <div class="menu__list-wrapper">
+    <ul class="menu__list">
+      <li class="menu__list-item" (click)="isOpen = false">
+        <a routerLink="/orders" class="menu__list-item-link" routerLinkActive="active"
+          [routerLinkActiveOptions]="{exact: true}">
+          <i class="uil uil-clipboard-blank"></i>
+          <p>{{'sidebar.orders' | translate}}</p>
+
+          <span class="item-right-border"></span>
+        </a>
+      </li>
+      <li class="menu__list-item" (click)="isOpen = false">
+        <a routerLink="/finance" class="menu__list-item-link" routerLinkActive="active"
+          [routerLinkActiveOptions]="{exact: true}">
+          <i class="uil uil-usd-square"></i>
+          <p>{{'sidebar.finance' | translate}}</p>
+          <span class="item-right-border"></span>
+        </a>
+      </li>
+      <li class="menu__list-item" (click)="isOpen = false">
+        <a routerLink="/statistics" class="menu__list-item-link" routerLinkActive="active"
+          [routerLinkActiveOptions]="{exact: true}">
+          <i class="uil uil-chart-line"></i>
+          <p>{{'sidebar.statistics' | translate}}</p>
+          <span class="item-right-border"></span>
+        </a>
+      </li>
+      <li class="menu__list-item" (click)="isOpen = false">
+        <a routerLink="/documents" class="menu__list-item-link" routerLinkActive="active"
+          [routerLinkActiveOptions]="{exact: true}">
+          <i class="uil uil-file-blank"></i>
+          <p>{{'sidebar.documents' | translate}}</p>
+
+          <span class="item-right-border"></span>
+        </a>
+      </li>
+    </ul>
+
+    <!-- <ul class="menu__list">
+      <li class="menu__list-item" (click)="isOpen = false">
+        <a routerLink="/tasks" class="menu__list-item-link" routerLinkActive="active"
+          [routerLinkActiveOptions]="{exact: true}">
+          <i class="uil uil-check-circle"></i>
+          <p>{{'sidebar.tasks' | translate}}</p>
+          <span class="item-right-border"></span>
+        </a>
+      </li>
+       <li class="menu__list-item" (click)="isOpen = false">
+        <a routerLink="/chat" class="menu__list-item-link" routerLinkActive="active"
+          [routerLinkActiveOptions]="{exact: true}">
+          <i class="uil uil-comments-alt"></i>
+          <p>{{'sidebar.chat' | translate}}</p>
+          <span class="item-right-border"></span>
+        </a>
+      </li>
+      <li class="menu__list-item" (click)="isOpen = false">
+        <a routerLink="/requests" class="menu__list-item-link" routerLinkActive="active"
+          [routerLinkActiveOptions]="{exact: true}">
+          <i class="uil uil-envelope-question"></i>
+          <p>{{'sidebar.requests' | translate}}</p>
+          <span class="item-right-border"></span>
+        </a>
+      </li>
+      <li class="menu__list-item" (click)="isOpen = false">
+        <a routerLink="/notifications" class="menu__list-item-link" routerLinkActive="active"
+          [routerLinkActiveOptions]="{exact: true}">
+          <i class="uil uil-bell"></i>
+          <p>{{'sidebar.notifications' | translate}}</p>
+          <span class="menu__list-item-badge badge">1</span>
+        </a>
+      </li>
+      <li class="menu__list-item" (click)="isOpen = false">
+        <a routerLink="/reviews" class="menu__list-item-link" routerLinkActive="active"
+          [routerLinkActiveOptions]="{exact: true}">
+          <i class="uil uil-star"></i>
+          <p>{{'sidebar.reviews' | translate}}</p>
+          <span class="item-right-border"></span>
+        </a>
+      </li>
+    </ul> -->
+
+    <ul class="menu__list">
+      <li class="menu__list-item" (click)="isOpen = false">
+        <a routerLink="/colleagues" class="menu__list-item-link" routerLinkActive="active"
+          [routerLinkActiveOptions]="{exact: true}">
+          <i class="uil uil-users-alt"></i>
+          <p>{{'sidebar.colleagues' | translate}}</p>
+          <span class="item-right-border"></span>
+        </a>
+      </li>
+      <li class="menu__list-item" (click)="isOpen = false">
+        <a routerLink="/companies" class="menu__list-item-link" routerLinkActive="active"
+          [routerLinkActiveOptions]="{exact: true}">
+          <i class="uil uil-building"></i>
+          <p>{{'sidebar.companies' | translate}}</p>
+          <span class="item-right-border"></span>
+        </a>
+      </li>
+      <li class="menu__list-item" (click)="isOpen = false">
+        <a routerLink="/profile" class="menu__list-item-link" routerLinkActive="active"
+          [routerLinkActiveOptions]="{exact: true}">
+          <i class="uil uil-user-circle"></i>
+          <p>{{'sidebar.profile' | translate}}</p>
+          <span class="item-right-border"></span>
+        </a>
+      </li>
+    </ul>
+
+    <ul class="menu__list">
+      <!-- <li class="menu__list-item" (click)="isOpen = false">
+        <a routerLink="/useful" class="menu__list-item-link" routerLinkActive="active"
+          [routerLinkActiveOptions]="{exact: true}">
+          <i class="uil uil-question-circle"></i>
+          <p>{{'sidebar.useful' | translate}}</p>
+          <span class="item-right-border"></span>
+        </a>
+      </li> -->
+      <li class="menu__list-item" (click)="isOpen = false">
+        <a routerLink="/tickets" class="menu__list-item-link" routerLinkActive="active"
+          [routerLinkActiveOptions]="{exact: true}">
+          <i class="uil uil-envelope"></i>
+          <p>{{'sidebar.support' | translate}}</p>
+          <span class="item-right-border"></span>
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <button class="menu__toggle-button" (click)="toggleMenu()">
+    <i class="uil uil-left-arrow-to-left" *ngIf="!collapseMenu"></i>
+    <i class="uil uil-arrow-to-right" *ngIf="collapseMenu"></i>
+    <p>{{ 'sidebar.collapse' | translate }}</p>
+  </button>
+</div>
+
+<div class="overlay" *ngIf="isOpen" (click)="isOpen = false"></div>

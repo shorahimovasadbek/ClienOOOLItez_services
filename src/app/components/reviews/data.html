@@ -1,0 +1,114 @@
+<div style="text-align: center; margin-top: 100px; margin-bottom: 100px">
+    <h2>На разработке</h2>
+</div>
+
+<!-- <div class="content-header" *ngIf="!isColleaguesRoute">
+    <h2 class="page-title">{{'reviews.title' | translate}}</h2>
+    <div class="review-header-buttons">
+        <button class="btn btn-outline"> <i class="uil uil-envelope-upload"></i>
+            <span>{{'reviews.add_appeals' | translate}}</span>
+        </button>
+        <button class="btn btn-primary"> <i class="uil uil-pen"></i>
+            <span>{{'reviews.write_review' | translate}}</span>
+        </button>
+    </div>
+</div>
+
+<div class="d-flex justify-between">
+    <div class="d-flex align-center">
+        <button class="btn" [ngClass]="{'btn-outline': activeButton === 'orders', 'grey': activeButton !== 'orders'}"
+            (click)="setActive('orders')">
+            {{'reviews.orders' | translate}}
+        </button>
+        <button class="btn"
+            [ngClass]="{'btn-outline': activeButton === 'managers', 'grey': activeButton !== 'managers'}"
+            (click)="setActive('managers')">
+            {{'reviews.managers' | translate}}
+        </button>
+        <button class="btn" [ngClass]="{'btn-outline': activeButton === 'appeals', 'grey': activeButton !== 'appeals'}"
+            (click)="setActive('appeals')">
+            {{'reviews.appeals' | translate}}
+        </button>
+    </div>
+    <div class="d-web">
+        <div class="pagination">
+            <p class="pagination__count-text">
+                {{ pageParams.from }}-{{ pageParams.to }} из {{ pageParams.total }}
+            </p>
+
+            <ng-select [clearable]="false" [(ngModel)]="pageParams.per_page" (change)="updatePageSize($event)">
+                <ng-option [value]="10">По 10 строк</ng-option>
+                <ng-option [value]="30">По 30 строк</ng-option>
+                <ng-option [value]="50">По 50 строк</ng-option>
+            </ng-select>
+
+            <div class="pagination__buttons">
+                <button [disabled]="pageParams.current_page <= 1" (click)="changePage(pageParams.current_page - 1)">
+                    <i class="uil uil-angle-left"></i>
+                </button>
+                <button [disabled]="pageParams.current_page >= pageParams.last_page"
+                    (click)="changePage(pageParams.current_page + 1)">
+                    <i class="uil uil-angle-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="review-complaint-list-wrapper">
+    <ul class="review-complaint-list">
+        <li class="review-complaint-item">
+            <div class="review-complaint-item__wrapper">
+                <div class="rate">
+                    <i *ngFor="let star of [1,2,3,4,5]; let i = index" class="uil uil-star"
+                        [ngClass]="{'selected': i < (hoverRating || rating)}">
+                    </i>
+                </div>
+                <p class="directions">A1234 · Санкт-Петербург — Ташкент / 10 августа 2024, 11:45</p>
+                <p class="date">3 сентября 2024, 11:45</p>
+            </div>
+            <p class="review-complaint-item__text">Nunc mattis ipsum sodales adipiscing quis gravida id
+                amet nam. In dictum bibendum lacus facilisis. Non nunc odio vitae vitae eget mattis
+                lacus nam diam. Ut libero odio pretium rhoncus purus nunc pellentesque pellentesque ut.
+                In nulla suspendisse tempor mattis sodales convallis dignissim.</p>
+            <ul class="review-complaint-item__files-list">
+                <li>
+                    <a><img src="./assets/images/Frame 265.png" alt="boxes image"></a>
+                </li>
+                <li>
+                    <a><img src="./assets/images/pdf-frame.png" alt="pdf file image"></a>
+                </li>
+                <li>
+                    <a><img src="./assets/images/word-frame.png" alt="word file image"></a>
+                </li>
+            </ul>
+            <div class="review-complaint-item__operations">
+                <button class="edit">Изменить отзыв</button>
+                <button class="delete">Удалить</button>
+            </div>
+        </li>
+    </ul>
+</div>
+
+<div class="pagination">
+    <p class="pagination__count-text d-web">
+        {{ pageParams.from }}-{{ pageParams.to }} из {{ pageParams.total }}
+    </p>
+
+    <ng-select [clearable]="false" [(ngModel)]="pageParams.per_page" (change)="updatePageSize($event)">
+        <ng-option [value]="10">По 10 строк</ng-option>
+        <ng-option [value]="30">По 30 строк</ng-option>
+        <ng-option [value]="50">По 50 строк</ng-option>
+    </ng-select>
+
+    <div class="pagination__buttons">
+        <button [disabled]="pageParams.current_page <= 1" (click)="changePage(pageParams.current_page - 1)">
+            <i class="uil uil-angle-left"></i>
+        </button>
+        <button [disabled]="pageParams.current_page >= pageParams.last_page"
+            (click)="changePage(pageParams.current_page + 1)">
+            <i class="uil uil-angle-right"></i>
+        </button>
+    </div>
+</div> -->

@@ -1,0 +1,1082 @@
+<div class="content-header">
+  <h1 class="page-title">{{'orders.my_orders' | translate}}</h1>
+
+  <div class="filter">
+    <ul class="filters">
+      <li>
+        <button
+          type="button"
+          class="btn btn-outline"
+          [ngClass]="{'selected': isAllStatusesUnchecked}"
+          (click)="selectedStatus({ val: 'Все' })"
+        >
+          <span class="badge">{{total}}</span> {{ 'orders.all_orders' |
+          translate }}
+        </button>
+      </li>
+      <span class="seperator-border"></span>
+      <li *ngFor="let item of statuses">
+        <button
+          class="btn btn-light"
+          [ngClass]="{ 'selected': item.checked }"
+          (click)="selectedStatus(item)"
+        >
+          <span class="badge {{item.color}}">{{ item.count }}</span>
+          {{ item.title | translate }}
+          <i class="uil uil-times close"></i>
+        </button>
+      </li>
+      
+    </ul>
+  </div>
+
+  <button
+    [ngClass]="{
+        'btn-primary': selectedItems.length !== 0, 
+        'btn-white': selectedItems.length === 0
+      }"
+    class="btn"
+    class="btn"
+    (click)="exportData()"
+  >
+    <i class="uil uil-export"></i>
+    <span class="d-web">{{'orders.export' | translate}}</span>
+  </button>
+</div>
+
+<div class="content-filter" *ngIf="filter">
+  <div class="form-group">
+    <div class="input_icons">
+      <i
+        *ngIf="filter.from_date"
+        class="uil uil-times clear-icon"
+        (click)="clearDate()"
+      ></i>
+      <input
+        #dateInput
+        appDatepickerOverlay
+        class="form-control date-range"
+        type="text"
+        id="date"
+        ngxDaterangepickerMd
+        style="background: transparent !important"
+        [autoApply]="true"
+        autocomplete="off"
+        [closeOnAutoApply]="true"
+        placeholder="{{ 'orders.all_period' | translate }}"
+        [locale]="{ format: 'YYYY/MM/DD' }"
+        [(ngModel)]="selectedDateRange"
+        (ngModelChange)="onDateRangeChange($event)"
+        appendTo="body"
+      />
+      <i class="uil uil-calender"></i>
+    </div>
+  </div>
+
+  <div class="button-group">
+    <button class="btn btn-outline" (click)="openFilterModal()">
+      <i *ngIf="showFilters" class="uil uil-filter"></i>
+      <i *ngIf="!showFilters" class="uil uil-filter-slash"></i>
+      <span>{{'filter' | translate}}</span>
+    </button>
+
+    <button class="btn btn-outline" (click)="resetFilter()">
+      <i class="uil uil-filter-slash"></i>
+      <span>{{'reset' | translate}}</span>
+    </button>
+
+    <button class="btn btn-light p-0" (click)="alertShow = !alertShow">
+      <i class="uil uil-eye-slash"></i>
+      <span class="indicators__list-item-text">{{'hide' | translate}}</span>
+    </button>
+  </div>
+
+  <div class="pagination">
+    <p class="pagination__count-text d-web">
+      {{ pageParams.from }}-{{ pageParams.to }} из {{ pageParams.total }}
+      заказов
+    </p>
+
+    <ng-select
+      [clearable]="false"
+      [searchable]="false"
+      [(ngModel)]="filter.per_page"
+      (change)="updatePageSize($event)"
+    >
+      <ng-option [value]="30">По 30 строк</ng-option>
+      <ng-option [value]="50">По 50 строк</ng-option>
+      <ng-option [value]="100">По 100 строк</ng-option>
+    </ng-select>
+
+    <div class="pagination__buttons">
+      <button
+        [disabled]="pageParams.current_page <= 1"
+        (click)="changePage(pageParams.current_page - 1)"
+      >
+        <i class="uil uil-angle-left"></i>
+      </button>
+      <button
+        [disabled]="pageParams.current_page >= pageParams.last_page"
+        (click)="changePage(pageParams.current_page + 1)"
+      >
+        <i class="uil uil-angle-right"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="table-container">
+  <div class="table-wrapper">
+    <table>
+      <thead class="thead-sticky thead-sortable">
+        <tr>
+          <th class="checkbox">
+            <input
+              id="all"
+              class="checkbox-input"
+              type="checkbox"
+              [checked]="allSelected"
+              (change)="toggleAllSelection()"
+            />
+            <label
+              for="all"
+              class="checkbox-label"
+              style="padding-bottom: 10px; margin: 0 auto"
+            ></label>
+          </th>
+          <ng-container *ngFor="let item of columns">
+            <th
+              *ngIf="item.visible"
+              [ngClass]="{'white-wrap': item.key == 'transport_number'}"
+            >
+              <div>{{ item.label | translate }}</div>
+              <div *ngIf="item.sort" class="sort-buttons">
+                <i
+                  class="uil uil-arrow-up"
+                  [class.active]="filter.sort_type === item.key && filter.sort === 'asc'"
+                  (click)="setSort(item.key, 'asc')"
+                >
+                </i>
+                <i
+                  class="uil uil-arrow-down"
+                  [class.active]="filter.sort_type === item.key && filter.sort === 'desc'"
+                  (click)="setSort(item.key, 'desc')"
+                >
+                </i>
+              </div>
+            </th>
+          </ng-container>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          *ngFor="let item of dataItems;let i=index"
+          [ngClass]="{'selected-item': item.selected}"
+        >
+          <td>
+            <div class="td-data checkbox">
+              <input
+                class="checkbox-input"
+                type="checkbox"
+                id="checkbox{{item.id}}"
+                [(ngModel)]="item.selected"
+                (change)="onCheckboxChange(item)"
+              />
+              <label class="checkbox-label" for="checkbox{{item.id}}"></label>
+
+              <span
+                class="checkbox-span-border active"
+                [ngClass]="{
+                      'active': item.status === 'Активен',
+                      'completed': item.status === 'Завершен',
+                      'planned': item.status === 'План',
+                      'canceled': item.status === 'Аннулировано',
+                       }"
+              ></span>
+            </div>
+          </td>
+          <td *ngIf="isColumnVisible('num')">
+            <div
+              class="td-data"
+              [class.text-wrap]="expandedRow === i"
+              style="max-width: 350px !important"
+            >
+              <p class="text bold">{{item.num}} · {{item.marwrut}}</p>
+              <ul class="route-list">
+                <li>
+                  <button>
+                    <i class="uil uil-chat blue"></i>
+                    <p class="route-list-text">{{'sidebar.chat' | translate}}</p>
+                  </button>
+                </li>
+                <li>
+                  <button>
+                    <i class="uil uil-check-circle blue"></i>
+                    <p class="route-list-text">{{'sidebar.tasks' | translate}}</p>
+                  </button>
+                </li>
+                <li>
+                  <button routerLink="/documents/{{item.id}}/document/all">
+                    <i class="uil uil-file blue"></i>
+                    <p class="route-list-text">{{'sidebar.documents' | translate}}</p>
+                    <i class="uil uil-plus blue"></i>
+                  </button>
+                </li>
+                <li>
+                  <button
+                    class="read-more blue"
+                    (click)="toggleRowExpansion(i)"
+                  >
+                    <span
+                      >{{ expandedRow === i ? ('hide' | translate) : ('read_more' | translate) }}</span
+                    >
+                    <i
+                      [class]="expandedRow === i ? 'uil uil-angle-up' : 'uil uil-angle-down'"
+                    ></i>
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </td>
+
+          <td *ngIf="isColumnVisible('status')">
+            <div class="td-data td-date">
+              <span
+                [ngClass]="{
+                    'active': item.status === 'Активен',
+                    'completed': item.status === 'Завершен',
+                    'planned': item.status === 'Запланирован',
+                    'canceled': item.status === 'Аннулирован',
+                     }"
+                class="status"
+                >{{item.status}}</span
+              >
+            </div>
+          </td>
+          <td *ngIf="isColumnVisible('ship_date')">
+            <div class="td-data">{{item.ship_date}}</div>
+          </td>
+
+          <td *ngIf="isColumnVisible('customer')" style="min-width: 200px">
+            <div class="td-data mw-200" [class.text-wrap]="expandedRow === i">
+              <p class="text">{{item.customer}}</p>
+              <div class="inner-wrapper">
+                <div class="inner flex-column">
+                  <div class="d-flex">
+                    <button class="read-more" (click)="toggleRowExpansion(i)">
+                      <span
+                        >{{ expandedRow === i ? 'Скрыть' : 'Читать далее'
+                        }}</span
+                      >
+                      <i
+                        [class]="expandedRow === i ? 'uil uil-angle-up' : 'uil uil-angle-down'"
+                      ></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+
+          <td *ngIf="isColumnVisible('tovar')" style="min-width: 200px">
+            <div class="td-data mw-200" [class.text-wrap]="expandedRow === i">
+              <p class="text">
+                {{item.tovar}}
+                <ng-container *ngIf="item.products.length > 0">
+                  /
+                  <span *ngFor="let i of item.products"> {{i.p_info}} </span>
+                </ng-container>
+              </p>
+              <div class="inner-wrapper">
+                <div class="inner flex-column">
+                  <div class="d-flex">
+                    <button class="read-more" (click)="toggleRowExpansion(i)">
+                      <span
+                        >{{ expandedRow === i ? 'Скрыть' : 'Читать далее'
+                        }}</span
+                      >
+                      <i
+                        [class]="expandedRow === i ? 'uil uil-angle-up' : 'uil uil-angle-down'"
+                      ></i>
+                    </button>
+                    <button
+                      *ngIf="item.products.length > 0"
+                      class="orders-count"
+                      (click)="openProductModal(item.products)"
+                    >
+                      <i class="uil uil-info-circle"></i>
+                      <span>Товары ({{item.products.length}})</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td *ngIf="isColumnVisible('tamojni')">
+            <div class="td-data" [class.text-wrap]="expandedRow === i">
+              <p class="text">{{ item.tamojni }}</p>
+              <div class="inner">
+                <button class="read-more" (click)="toggleRowExpansion(i)">
+                  <span
+                    >{{ expandedRow === i ? 'Скрыть' : 'Читать далее' }}</span
+                  >
+                  <i
+                    [class]="expandedRow === i ? 'uil uil-angle-up' : 'uil uil-angle-down'"
+                  ></i>
+                </button>
+                <button class="copy" (click)="copyToClipboard(item.tamojni)">
+                  <i class="uil uil-copy"></i>
+                  <span>Копировать</span>
+                </button>
+                <button
+                  *ngIf="item.products.length > 0"
+                  class="orders-count"
+                  (click)="openProductModal(item.products)"
+                >
+                  <i class="uil uil-info-circle"></i>
+                  <span>Пункты ({{item.products.length}})</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td *ngIf="isColumnVisible('num_contr')">
+            <div class="td-data">{{item.num_contr}}</div>
+          </td>
+          <td *ngIf="isColumnVisible('num_contr_date')">
+            <div class="td-data">{{item.num_contr_date}}</div>
+          </td>
+          <td *ngIf="isColumnVisible('ord_num')">
+            <div class="td-data">
+              <p class="text">{{item.ord_num}}</p>
+            </div>
+          </td>
+          <td *ngIf="isColumnVisible('ord_date')">
+            <div class="td-data">{{item.ord_date}}</div>
+          </td>
+          <td *ngIf="isColumnVisible('transport_kind')">
+            <div class="td-data" *ngFor="let i of item.drivers">
+              {{i.transport}}
+            </div>
+          </td>
+          <td *ngIf="isColumnVisible('transport_number')">
+            <div class="td-data" *ngFor="let i of item.drivers">
+              {{i.tc_num}} <br />
+              {{i.trl_num}}
+            </div>
+          </td>
+          <td *ngIf="isColumnVisible('driver_info')">
+            <div class="td-data" *ngFor="let i of item.drivers">
+              <p class="text white-wrap">{{i.fullname}}</p>
+              <span class="subtext"> {{i.card_id}}</span>
+            </div>
+          </td>
+          <td *ngIf="isColumnVisible('driver_contact')">
+            <div class="td-data white-wrap" *ngFor="let i of item.drivers ">
+              {{ i.contacts }}
+            </div>
+          </td>
+          <td *ngIf="isColumnVisible('bord_cross')" class="mw-100">
+            <div class="td-data">{{item.bord_cross}}</div>
+          </td>
+          <td *ngIf="isColumnVisible('sts_curr')">
+            <div class="td-data" [class.text-wrap]="expandedRow === i">
+              <p class="text m-0">{{item.sts_curr}}</p>
+              <div class="inner" *ngIf="item.sts_curr">
+                <button class="read-more" (click)="toggleRowExpansion(i)">
+                  <span
+                    >{{ expandedRow === i ? 'Скрыть' : 'Читать далее' }}</span
+                  >
+                  <i
+                    [class]="expandedRow === i ? 'uil uil-angle-up' : 'uil uil-angle-down'"
+                  ></i>
+                </button>
+              </div>
+            </div>
+          </td>
+
+          <td *ngIf="isColumnVisible('svx_d')">
+            <div class="td-data">{{item.svx_d}}</div>
+          </td>
+          <td *ngIf="isColumnVisible('unload_d')">
+            <div class="td-data">{{item.unload_d}}</div>
+          </td>
+          <td *ngIf="isColumnVisible('simple_carr')">
+            <div class="td-data">
+              {{item.simple_carr | number }} {{item.currency_6}}
+            </div>
+          </td>
+          <td *ngIf="isColumnVisible('carr_rate')">
+            <div class="td-data">
+              {{item.carr_rate | number}} {{item.currency_4}}
+            </div>
+          </td>
+          <td *ngIf="isColumnVisible('tax')">
+            <div class="td-data">{{item.tax | number}} {{item.currency_6}}</div>
+          </td>
+          <td *ngIf="isColumnVisible('prepay')">
+            <div class="td-data">
+              <div *ngFor="let i of item.prepay">
+                {{i.amount | number}} {{item.currency_6}}
+              </div>
+            </div>
+          </td>
+          <td *ngIf="isColumnVisible('dept')">
+            <div class="td-data mw-200">
+              {{item.dept | number}} {{item.currency_6}}
+            </div>
+          </td>
+          <td *ngIf="isColumnVisible('schet')">
+            <div class="td-data mw-200">
+              {{item.schet | number}} {{item.currency_6}}
+            </div>
+          </td>
+          <td *ngIf="isColumnVisible('meesages')">
+            <div class="td-data">
+              <div class="td-data-badge">
+                <span class="text">1</span>
+                <span class="td-badge badge badge-danger">1</span>
+              </div>
+            </div>
+          </td>
+          <td *ngIf="isColumnVisible('tasks')">
+            <div class="td-data">
+              <div class="td-data-badge">
+                <span class="text">14545</span>
+                <span class="td-badge badge badge-success">1</span>
+              </div>
+            </div>
+          </td>
+          <td *ngIf="isColumnVisible('documents')">
+            <div class="td-data">
+              <div class="td-data-badge">
+                <span class="text">1</span>
+                <span class="td-badge badge badge-blue">1</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Filter Modal -->
+<div class="sweet_alert-content" [ngClass]="{'open': filterModal}">
+  <form (keydown.enter)="getInvoices(1)" #dataForm="ngForm" class="sweet_alert-body" style="width: 800px">
+    <h2 class="sweet_alert-title">{{ 'filter' | translate }}</h2>
+    <button class="close-alert" type="button" (click)="closeAlert()">
+      <i class="uil uil-times"></i>
+    </button>
+    <div class="sweet_alert-inner full">
+      <div class="row">
+        <div class="col-sm-4 mb-2">
+          <div class="form-group">
+            <label class="form-label"
+              >{{'orders.order_num' | translate}}:</label
+            >
+            <input type="text" name="num" class="form-control" [(ngModel)]="filter.num" />
+          </div>
+        </div>
+        <div class="col-sm-4 mb-2">
+          <label class="form-label">{{'status' | translate}}:</label>
+          <ng-select
+            name="status"
+            class="form-control"
+            [clearable]="false"
+            [searchable]="false"
+            [(ngModel)]="filter.status"
+          >
+            <ng-option value="">Все</ng-option>
+            <ng-option [value]="'Завершен'">Завершен</ng-option>
+            <ng-option [value]="'Активен'">Активный</ng-option>
+            <ng-option [value]="'План'">Запланирован</ng-option>
+            <ng-option [value]="'Аннулировано'">Аннулирован</ng-option>
+          </ng-select>
+        </div>
+        <div class="col-sm-4 mb-2">
+          <label class="form-label">{{'orders.ship_date' | translate}}:</label>
+          <div class="filter-datepicker date">
+            <input
+              class="form-control"
+              type="date" name="ship_date"
+              placeholder="{{ 'Все' | translate }}"
+              [(ngModel)]="filter.ship_date"
+            />
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-4 mb-2">
+          <div class="form-group">
+            <label class="form-label">{{'orders.customer' | translate}}:</label>
+            <select
+              name="customer"
+              class="form-control"
+              [(ngModel)]="filter.customer" >
+              <option value="">{{'all' | translate}}</option>
+              <option *ngFor="let item of companies" [value]="item.title">{{item.title}}</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-sm-4 mb-2">
+          <div class="form-group">
+            <label class="form-label">{{'orders.tovar' | translate}}:</label>
+            <input
+              type="text"
+              name="tovar"
+              class="form-control"
+              [(ngModel)]="filter.tovar"
+            />
+          </div>
+        </div>
+        <div class="col-sm-4 mb-2">
+          <div class="form-group">
+            <label class="form-label">{{'orders.tamojni' | translate}}:</label>
+            <input
+              type="text"
+              class="form-control"
+              name="tamojni"
+              [(ngModel)]="filter.tamojni"
+            />
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-4 mb-2">
+          <div class="form-group">
+            <label class="form-label"
+              >{{'orders.num_contr' | translate}}:</label
+            >
+            <input
+              type="text"
+              class="form-control"
+              name="num_contr"
+              [(ngModel)]="filter.num_contr"
+            />
+          </div>
+        </div>
+        <div class="col-sm-4 mb-2">
+          <label class="form-label"
+            >{{'orders.num_contr_date' | translate}}:</label
+          >
+          <div class="filter-datepicker date">
+            <input
+              class="form-control"
+              type="date"
+              name="contr_date"
+              placeholder="{{ 'Все' | translate }}"
+              [(ngModel)]="filter.contr_date"
+            />
+          </div>
+        </div>
+        <div class="col-sm-4 mb-2">
+          <div class="form-group">
+            <label class="form-label">{{'orders.ord_num' | translate}}:</label>
+            <input
+              type="text"
+              class="form-control"
+              name="ord_num"
+              [(ngModel)]="filter.ord_num"
+            />
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-4 mb-2">
+          <label class="form-label">{{'orders.ord_date' | translate}}:</label>
+          <div class="filter-datepicker date">
+            <input
+              class="form-control"
+              type="date"
+              name="ord_date"
+              placeholder="{{ 'Все' | translate }}"
+              [(ngModel)]="filter.ord_date"
+            />
+          </div>
+        </div>
+        <div class="col-sm-4 mb-2">
+          <div class="form-group">
+            <label class="form-label"
+              >{{'orders.transport_kind' | translate}}:</label
+            >
+            <input
+              type="text"
+              class="form-control"
+              name="transport"
+              [(ngModel)]="filter.transport"
+            />
+          </div>
+        </div>
+        <div class="col-sm-4 mb-2">
+          <div class="form-group">
+            <label class="form-label"
+              >{{'orders.transport_number' | translate}}:</label
+            >
+            <input
+              type="text"
+              class="form-control"
+              name="tc_num"
+              [(ngModel)]="filter.tc_num"
+            />
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-4 mb-2">
+          <div class="form-group">
+            <label class="form-label"
+              >{{'orders.driver_info' | translate}}:</label
+            >
+            <input
+              type="text"
+              class="form-control"
+              name="driver"
+              [(ngModel)]="filter.driver"
+            />
+          </div>
+        </div>
+        <div class="col-sm-4 mb-2">
+          <div class="form-group">
+            <label class="form-label"
+              >{{'orders.driver_contact' | translate}}:</label
+            >
+            <input
+              type="text"
+              class="form-control"
+              name="contact"
+              [(ngModel)]="filter.contact"
+            />
+          </div>
+        </div>
+        <div class="col-sm-4 mb-2">
+          <div class="form-group">
+            <label class="form-label"
+              >{{'orders.bord_cross' | translate}}:</label
+            >
+            <input
+              type="text"
+              class="form-control"
+              name="bord_cross"
+              [(ngModel)]="filter.bord_cross"
+            />
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-4 mb-2">
+          <div class="form-group">
+            <label class="form-label">{{'orders.sts_curr' | translate}}:</label>
+            <input
+              type="text"
+              class="form-control"
+              name="sts_curr"
+              [(ngModel)]="filter.sts_curr"
+            />
+          </div>
+        </div>
+
+        <div class="col-sm-4 mb-2">
+          <label class="form-label">{{'orders.svx_d' | translate}}:</label>
+          <div class="filter-datepicker date">
+            <input
+              class="form-control"
+              type="date"
+              placeholder="{{ 'Все' | translate }}"
+              name="svx_d"
+              [(ngModel)]="filter.svx_d"
+            />
+          </div>
+        </div>
+
+        <div class="col-sm-4 mb-2">
+          <label class="form-label">{{'orders.unload_d' | translate}}:</label>
+          <div class="filter-datepicker date">
+            <input
+              class="form-control"
+              type="date"
+              placeholder="{{ 'Все' | translate }}"
+              name="unload_d"
+              [(ngModel)]="filter.unload_d"
+            />
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-4 mb-2">
+          <div class="form-group">
+            <label class="form-label"
+              >{{'orders.simple_carr' | translate}}:</label
+            >
+            <input
+              type="text"
+              class="form-control"
+              name="simple_carr"
+              [(ngModel)]="filter.simple_carr"
+            />
+          </div>
+        </div>
+        <div class="col-sm-4 mb-2">
+          <div class="form-group">
+            <label class="form-label">{{'orders.prepay' | translate}}:</label>
+            <input
+              type="text"
+              class="form-control"
+              name="prepay"
+              [(ngModel)]="filter.prepay"
+            />
+          </div>
+        </div>
+        <div class="col-sm-4 mb-2">
+          <div class="form-group">
+            <label class="form-label">{{'orders.dept' | translate}}:</label>
+            <input type="text" class="form-control" name="dept" [(ngModel)]="filter.dept" />
+          </div>
+        </div>
+        <div class="col-sm-4 mb-2">
+          <div class="form-group">
+            <label class="form-label">{{'orders.schet' | translate}}:</label>
+            <input
+              type="text"
+              class="form-control"
+              name="schet"
+              [(ngModel)]="filter.schet"
+            />
+          </div>
+        </div>
+        <div class="col-sm-4 mb-2">
+          <div class="form-group">
+            <label class="form-label">{{'orders.ship_date_year' | translate}}:</label>
+            <select
+              class="form-control"
+              name="ship_date_year"
+              [(ngModel)]="filter.ship_date_year">
+              <option value="">{{'all' | translate}}</option>
+              <option value="2023">2023</option>
+              <option value="2024">2024</option>
+              <option value="2025">2025</option>
+              <option value="2026">2026</option>
+              <option value="2027">2027</option>
+              <option value="2028">2028</option>
+            </select>    
+          </div>
+        </div>
+        <div class="col-sm-4 mb-2">
+          <div class="form-group">
+            <label class="form-label">{{'orders.ship_date_month' | translate}}:</label>
+            <select
+              class="form-control"
+              name="ship_date_month"
+              [(ngModel)]="filter.ship_date_month">
+              <option value="">{{'all' | translate}}</option>
+              <option value="1">{{'months.1' | translate}}</option>
+              <option value="2">{{'months.2' | translate}}</option>
+              <option value="3">{{'months.3' | translate}}</option>
+              <option value="4">{{'months.4' | translate}}</option>
+              <option value="5">{{'months.5' | translate}}</option>
+              <option value="6">{{'months.6' | translate}}</option>
+              <option value="7">{{'months.7' | translate}}</option>
+              <option value="8">{{'months.8' | translate}}</option>
+              <option value="9">{{'months.9' | translate}}</option>
+              <option value="10">{{'months.10' | translate}}</option>
+              <option value="11">{{'months.11' | translate}}</option>
+              <option value="12">{{'months.12' | translate}}</option>
+            </select>  
+          </div>
+        </div>
+        <div class="col-sm-4 mb-2">
+          <div class="form-group">
+            <label class="form-label">{{'orders.unload_d_year' | translate}}:</label>
+            <select
+              class="form-control"
+              name="unload_d_year"
+              [(ngModel)]="filter.unload_d_year">
+              <option value="">{{'all' | translate}}</option>
+              <option value="2023">2023</option>
+              <option value="2024">2024</option>
+              <option value="2025">2025</option>
+              <option value="2026">2026</option>
+              <option value="2027">2027</option>
+              <option value="2028">2028</option>
+            </select>    
+          </div>
+        </div>
+        <div class="col-sm-4 mb-2">
+          <div class="form-group">
+            <label class="form-label">{{'orders.unload_d_month' | translate}}:</label>
+            <select
+              class="form-control"
+              name="unload_d_month"
+              [(ngModel)]="filter.unload_d_month">
+              <option value="">{{'all' | translate}}</option>
+              <option value="1">{{'months.1' | translate}}</option>
+              <option value="2">{{'months.2' | translate}}</option>
+              <option value="3">{{'months.3' | translate}}</option>
+              <option value="4">{{'months.4' | translate}}</option>
+              <option value="5">{{'months.5' | translate}}</option>
+              <option value="6">{{'months.6' | translate}}</option>
+              <option value="7">{{'months.7' | translate}}</option>
+              <option value="8">{{'months.8' | translate}}</option>
+              <option value="9">{{'months.9' | translate}}</option>
+              <option value="10">{{'months.10' | translate}}</option>
+              <option value="11">{{'months.11' | translate}}</option>
+              <option value="12">{{'months.12' | translate}}</option>
+            </select>  
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sweet_alert-buttons">
+      <button
+        (click)="closeAlert()"
+        type="button"
+        class="btn btn-danger ml-3"
+        [disabled]="loading"
+      >
+        {{'cancel' | translate}}
+        <img
+          *ngIf="loading"
+          src="/assets/images/spinner.svg"
+          class="spinner-load"
+        />
+      </button>
+      <button
+        type="button"
+        (click)="getInvoices(1)"
+        class="btn btn-primary ml-3"
+        [disabled]="loading"
+      >
+        {{'search' | translate}}
+        <img
+          *ngIf="loading"
+          src="/assets/images/spinner.svg"
+          class="spinner-load"
+        />
+      </button>
+    </div>
+  </form>
+</div>
+<!-- Products Detail Modal -->
+<div class="sweet_alert-content" [ngClass]="{'open': showProductModal}">
+  <div class="sweet_alert-body" style="width: 800px">
+    <h2 class="sweet_alert-title">{{ 'orders.detail_tovar' | translate }}</h2>
+    <button class="close-alert" type="button" (click)="closeAlert()">
+      <i class="uil uil-times"></i>
+    </button>
+
+    <div class="sweet_alert-inner full">
+      <!-- Bootstrap Tabs -->
+      <ul class="nav nav-tabs" id="productTabs" role="tablist">
+        <li
+          class="nav-item"
+          *ngFor="let product of selectedProducts; let i = index"
+        >
+          <button
+            class="nav-link"
+            [ngClass]="{'active': i === activeTabIndex}"
+            id="tab-{{i}}"
+            (click)="selectTab(i)"
+            type="button"
+            role="tab"
+            [attr.aria-selected]="i === activeTabIndex"
+          >
+            {{ "orders.tovar" | translate }} №{{i +1}}
+          </button>
+        </li>
+      </ul>
+
+      <!-- Tab Content -->
+      <div class="tab-content" id="productTabsContent">
+        <div
+          class="tab-pane fade"
+          [ngClass]="{'show active': i === activeTabIndex}"
+          id="tab-content-{{i}}"
+          role="tabpanel"
+          *ngFor="let product of selectedProducts; let i = index"
+        >
+          <div class="row">
+            <div class="col-sm-3 mb-3">
+              <label class="form-label">{{'date_loading' | translate}}</label>
+              <strong class="d-block">{{product.date_d}}</strong>
+            </div>
+            <div class="col-sm-9 mb-3">
+              <label class="form-label">{{'addr_loading' | translate}}</label>
+              <strong class="d-block">{{product.address_d}}</strong>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-sm-6 mb-3">
+              <label class="form-label"
+                >{{'customs_clearance' | translate}}</label
+              >
+              <strong class="d-block">{{product.custom_a}}</strong>
+            </div>
+            <div class="col-sm-6 mb-3">
+              <label class="form-label"
+                >{{'customs_destination' | translate}}</label
+              >
+              <strong class="d-block">{{product.custom_b}}</strong>
+            </div>
+          </div>
+          <hr />
+
+          <div class="row" *ngFor="let item of product.addr_date_u">
+            <div class="col-sm-3 mb-3">
+              <label class="form-label"
+                >{{'orders.unload_d' | translate}}</label
+              >
+              <strong class="d-block">{{item.date_u}}</strong>
+            </div>
+            <div class="col-sm-9 mb-3">
+              <label class="form-label"
+                >{{'orders.unload_address' | translate}}</label
+              >
+              <strong class="d-block">{{item.address_u}}</strong>
+            </div>
+          </div>
+          <hr />
+
+          <div class="row">
+            <label class="form-label"
+              >{{'orders.desc_tovar' | translate}}</label
+            >
+            <strong class="d-block">{{product.p_info}}</strong>
+          </div>
+
+          <div class="row mt-3">
+            <div class="col-sm-2 mb-3">
+              <label class="form-label"
+                >{{'orders.seats_num' | translate}}</label
+              >
+              <strong class="d-block">{{product.qty}}</strong>
+            </div>
+            <div class="col-sm-2 mb-3">
+              <label class="form-label"
+                >{{'orders.packaging' | translate}}</label
+              >
+              <strong class="d-block">{{product.package}}</strong>
+            </div>
+            <div class="col-sm-2 mb-3">
+              <label class="form-label"
+                >{{'orders.volume_m3' | translate}}</label
+              >
+              <strong class="d-block">{{product.volume}}</strong>
+            </div>
+            <div class="col-sm-2 mb-3">
+              <label class="form-label"
+                >{{'orders.length_m' | translate}}</label
+              >
+              <strong class="d-block">{{product.lengths}}</strong>
+            </div>
+            <div class="col-sm-2 mb-3">
+              <label class="form-label">{{'orders.width_m' | translate}}</label>
+              <strong class="d-block">{{product.width}}</strong>
+            </div>
+            <div class="col-sm-2 mb-3">
+              <label class="form-label"
+                >{{'orders.height_m' | translate}}</label
+              >
+              <strong class="d-block">{{product.height}}</strong>
+            </div>
+          </div>
+
+          <hr />
+
+          <div class="row">
+            <div class="col-sm-12 mb-1">
+              <h5>Файлы</h5>
+            </div>
+          </div>
+          <div class="gallery">
+            <div *ngFor="let i of product.files" class="gallery-item">
+              <a
+                [href]="siteUrl + '/' + i.container + '/' + i.filename"
+                target="_blank"
+              >
+                <img
+                  [src]="siteUrl + '/' + i.container + '/' + i.filename"
+                  alt="Product Image"
+                />
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Show/Hide Columns Modal -->
+<div class="sweet_alert-content" [ngClass]="{'open':alertShow}">
+  <div class="sweet_alert-body" style="width: 800px">
+    <h2 class="sweet_alert-title">{{'column_managment' | translate}}</h2>
+    <button class="close-alert" type="button" (click)="closeAlert()">
+      <i class="uil uil-times"></i>
+    </button>
+    <div class="sweet_alert-inner full">
+      <div class="column-management">
+        <div class="checkbox" *ngFor="let column of columns">
+          <input
+            class="checkbox-input"
+            type="checkbox"
+            id="checkbox{{ column.key }}"
+            [(ngModel)]="column.visible"
+          />
+          <label class="checkbox-label" for="checkbox{{ column.key }}"></label>
+          <label for="checkbox{{ column.key }}" style="cursor: pointer"
+            >{{ column.label | translate }}</label
+          >
+        </div>
+      </div>
+    </div>
+    <div class="sweet_alert-buttons">
+      <button
+        type="button"
+        class="btn btn-primary ml-3"
+        [disabled]="loading"
+        (click)="setColumns()"
+      >
+        {{'save' | translate}}
+        <img
+          *ngIf="loading"
+          src="/assets/images/spinner.svg"
+          class="spinner-load"
+        />
+      </button>
+    </div>
+  </div>
+</div>
+<!-- Sorting Modal -->
+<div class="sort-modal" *ngIf="isSortModalOpen">
+  <div class="sort-modal-header">
+    <span>{{ 'sorting' | translate }}</span>
+    <i class="uil uil-times close-icon" (click)="closeSortModal()"></i>
+  </div>
+  <div class="sort-modal-content">
+    <div
+      class="sort-field"
+      [ngClass]="{'d-none': !field.sort}"
+      *ngFor="let field of columns"
+    >
+      <span>{{ field.label | translate }}</span>
+      <div class="sort-buttons">
+        <i
+          class="uil uil-arrow-up"
+          [class.active]="filter.sort_type === field.key && filter.sort === 'asc'"
+          (click)="setSort(field.key, 'asc')"
+        >
+        </i>
+        <i
+          class="uil uil-arrow-down"
+          [class.active]="filter.sort_type === field.key && filter.sort === 'desc'"
+          (click)="setSort(field.key, 'desc')"
+        >
+        </i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="loading-page" *ngIf="loadingPage">
+  <img src="/assets/images/spinner.svg" class="spinner-load" />
+</div>
